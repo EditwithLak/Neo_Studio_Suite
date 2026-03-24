@@ -1,0 +1,9 @@
+# Optional extras for some neo_library_v1 tools.
+# Install only what you actually use.
+numpy>=1.26
+tqdm>=4.66
+opencv-python>=4.10
+llama-cpp-python>=0.2.90
+gradio>=4.0
+matplotlib>=3.8
+controlnet-aux>=0.0.9
