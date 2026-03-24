@@ -1,0 +1,15 @@
+Neo Studio Batch Run Log
+==============================
+Job ID: 29b560d4-dba3-4b68-b59f-6cd1bd943357
+Status: completed
+Mode: dataset
+Folder: "/mnt/data/neo_fix/testimgs2"
+Summary: Processed: 0, saved: 0, skipped: 0, errors: 1.
+
+Errors
+------------------
+a.png: Vision error: All connection attempts failed
+
+Details
+------------------
+Error: a.png -> Vision error: All connection attempts failed

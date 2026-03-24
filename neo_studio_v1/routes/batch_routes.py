@@ -67,6 +67,9 @@ async def api_caption_batch_start(
     suffix: str = Form(''),
     output_style: str = Form('Auto (match input)'),
     output_folder: str = Form(''),
+    component_type: str = Form(''),
+    caption_mode: str = Form('full_image'),
+    detail_level: str = Form('detailed'),
     post_task_action: str = Form('none'),
 ):
     try:
@@ -76,6 +79,8 @@ async def api_caption_batch_start(
         return json_error(str(e), 400)
     if not images:
         return json_error('No supported image files found in that folder.', 400)
+    if (caption_mode or '').strip().lower().replace(' ', '_') == 'custom_crop':
+        return json_error('Batch captioning does not support Custom crop mode. Use Full image, Face only, Person / character, Outfit, Pose, or Location for batch runs.', 400)
 
     params = normalized_batch_params(
         model=model,
@@ -100,6 +105,9 @@ async def api_caption_batch_start(
         suffix=suffix,
         output_style=output_style,
         output_folder=output_folder,
+        component_type=component_type,
+        caption_mode=caption_mode,
+        detail_level=detail_level,
         post_task_action=post_task_action,
         clamp_int=clamp_int,
         clamp_float=clamp_float,

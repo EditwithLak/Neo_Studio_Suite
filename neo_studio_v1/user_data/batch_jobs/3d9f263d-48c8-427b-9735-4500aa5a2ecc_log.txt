@@ -1,0 +1,15 @@
+Neo Studio Batch Run Log
+==============================
+Job ID: 3d9f263d-48c8-427b-9735-4500aa5a2ecc
+Status: completed
+Mode: library
+Folder: /mnt/data/neo_fix/testimgs3
+Summary: Processed: 0, saved: 0, skipped: 0, errors: 1.
+
+Errors
+------------------
+b.png: name '_normalize_detail_level' is not defined
+
+Details
+------------------
+Error: b.png -> name '_normalize_detail_level' is not defined

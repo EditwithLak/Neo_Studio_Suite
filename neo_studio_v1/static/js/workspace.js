@@ -42,11 +42,19 @@ function buildBatchFormData() {
   fd.append('suffix', $('caption-suffix').value);
   fd.append('output_style', $('caption-output-style').value);
   fd.append('output_folder', $('batch-output-folder').value || '');
+  fd.append('component_type', $('caption-component-type')?.value || '');
+  fd.append('caption_mode', $('caption-mode')?.value || 'full_image');
+  fd.append('detail_level', $('caption-detail-level')?.value || 'detailed');
   fd.append('post_task_action', $('batch-post-action').value || 'none');
   return fd;
 }
 
 async function runBatchCaption() {
+  const mode = $('caption-mode')?.value || 'full_image';
+  if (mode === 'custom_crop') {
+    setStatus('batch-status', 'Batch captioning does not support Custom crop mode. Switch Caption mode to Full image, Face only, Person / character, Outfit, Pose, or Location.', 'warn');
+    return;
+  }
   const fd = buildBatchFormData();
   setBusy('btn-run-batch', true, 'Starting...');
   setStatus('batch-status', 'Starting batch captioning...');

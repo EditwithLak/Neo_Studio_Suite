@@ -1,0 +1,80 @@
+{
+  "job_id": "5404d6ff-7769-441e-8e90-c6ffda160a82",
+  "source_job_id": "",
+  "purpose": "run",
+  "status": "completed",
+  "message": "Batch finished. Processed: 1, saved: 1, skipped: 0, errors: 0.",
+  "mode": "dataset",
+  "total_items": 1,
+  "current_index": 1,
+  "current_item_name": "",
+  "current_item_path": "",
+  "current_item_started_at": 0.0,
+  "last_item_elapsed_seconds": 0.1203761100769043,
+  "processed": 1,
+  "saved": 1,
+  "skipped": 0,
+  "errors": 0,
+  "duplicates": 0,
+  "detail_lines": [
+    "Wrote txt: a.png"
+  ],
+  "error_lines": [],
+  "duplicate_lines": [],
+  "failed_items": [],
+  "remaining_items": [],
+  "started_at": 1774356292.6022546,
+  "finished_at": 1774356292.7255328,
+  "stats": {
+    "root": "/mnt/data/neo_fix/neo_library_data",
+    "prompt_count": 0,
+    "caption_count": 0,
+    "categories": [
+      "uncategorized"
+    ],
+    "last_prompt_category": "uncategorized",
+    "last_caption_category": "uncategorized",
+    "last_caption_preset": "Tags",
+    "last_prompt_preset": "Descriptive"
+  },
+  "categories": [
+    "uncategorized"
+  ],
+  "cancel_requested": false,
+  "post_action": "none",
+  "post_action_status": "idle",
+  "post_action_execute_at": 0.0,
+  "params": {
+    "model": "default",
+    "mode": "dataset",
+    "folder_path": "/mnt/data/neo_fix/testimgs",
+    "category": "uncategorized",
+    "base_name": "Batch_Caption",
+    "numbering_start": 1,
+    "overwrite_existing": false,
+    "skip_existing_txt": true,
+    "skip_duplicates": true,
+    "recursive": false,
+    "include_exts": [
+      ".png"
+    ],
+    "prompt_style": "Stable Diffusion Prompt",
+    "caption_length": "any",
+    "custom_prompt": "",
+    "max_new_tokens": 160,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "top_k": 40,
+    "prefix": "",
+    "suffix": "",
+    "output_style": "Auto (match input)",
+    "output_folder": "",
+    "post_task_action": "none",
+    "settings": {
+      "max_tokens": 160,
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "top_k": 40
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "job_id": "14295566-9a5e-45a9-be34-77f702adc001",
+  "source_job_id": "",
+  "purpose": "run",
+  "status": "completed",
+  "message": "Batch finished. Processed: 1, saved: 1, skipped: 0, errors: 0.",
+  "mode": "library",
+  "total_items": 1,
+  "current_index": 1,
+  "current_item_name": "",
+  "current_item_path": "",
+  "current_item_started_at": 0.0,
+  "last_item_elapsed_seconds": 0.033861637115478516,
+  "processed": 1,
+  "saved": 1,
+  "skipped": 0,
+  "errors": 0,
+  "duplicates": 0,
+  "detail_lines": [
+    "Saved library entry: b.png"
+  ],
+  "error_lines": [],
+  "duplicate_lines": [],
+  "failed_items": [],
+  "remaining_items": [],
+  "started_at": 1774356849.5847125,
+  "finished_at": 1774356849.6208208,
+  "stats": {
+    "root": "/mnt/data/neo_fix/neo_library_data",
+    "prompt_count": 0,
+    "caption_count": 1,
+    "categories": [
+      "people",
+      "uncategorized"
+    ],
+    "last_prompt_category": "uncategorized",
+    "last_caption_category": "people",
+    "last_caption_preset": "Tags",
+    "last_prompt_preset": "Descriptive"
+  },
+  "categories": [
+    "people",
+    "uncategorized"
+  ],
+  "cancel_requested": false,
+  "post_action": "none",
+  "post_action_status": "idle",
+  "post_action_execute_at": 0.0,
+  "params": {
+    "model": "fake",
+    "mode": "library",
+    "folder_path": "/mnt/data/neo_fix/testimgs4",
+    "category": "people",
+    "base_name": "Batch_Caption",
+    "numbering_start": 1,
+    "overwrite_existing": false,
+    "skip_existing_txt": true,
+    "skip_duplicates": true,
+    "recursive": false,
+    "include_exts": [
+      ".png"
+    ],
+    "prompt_style": "Stable Diffusion Prompt",
+    "caption_length": "any",
+    "custom_prompt": "",
+    "max_new_tokens": 160,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "top_k": 40,
+    "prefix": "",
+    "suffix": "",
+    "output_style": "Realistic",
+    "output_folder": "",
+    "component_type": "person",
+    "caption_mode": "person_only",
+    "detail_level": "attribute_rich",
+    "post_task_action": "none",
+    "settings": {
+      "max_tokens": 160,
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "top_k": 40,
+      "caption_mode": "person_only",
+      "component_type": "person",
+      "detail_level": "attribute_rich"
+    }
+  }
+}

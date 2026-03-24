@@ -1,0 +1,11 @@
+Neo Studio Batch Run Log
+==============================
+Job ID: 5404d6ff-7769-441e-8e90-c6ffda160a82
+Status: completed
+Mode: dataset
+Folder: /mnt/data/neo_fix/testimgs
+Summary: Processed: 1, saved: 1, skipped: 0, errors: 0.
+
+Details
+------------------
+Wrote txt: a.png

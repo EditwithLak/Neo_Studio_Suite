@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -13,6 +14,14 @@ from .library_storage import delete_temp_upload, iter_records, make_thumb, temp_
 _COMPONENT_TYPES = {'', 'face', 'person', 'outfit', 'pose', 'location', 'custom'}
 
 
+def _normalize_fs_path(value: str | Path) -> Path:
+    raw = str(value or '').strip()
+    if len(raw) >= 2 and raw[0] == raw[-1] and raw[0] in {'"', "'"}:
+        raw = raw[1:-1].strip()
+    raw = os.path.expandvars(raw)
+    return Path(raw).expanduser()
+
+
 def _normalize_component_type(value: str) -> str:
     value = (value or '').strip().lower().replace(' ', '_')
     return value if value in _COMPONENT_TYPES else ''
@@ -22,6 +31,11 @@ def _normalize_caption_mode(value: str) -> str:
     value = (value or 'full_image').strip().lower().replace(' ', '_')
     allowed = {'full_image', 'face_only', 'person_only', 'outfit_only', 'pose_only', 'location_only', 'custom_crop'}
     return value if value in allowed else 'full_image'
+
+
+def _normalize_detail_level(value: str) -> str:
+    value = (value or 'detailed').strip().lower().replace('-', '_').replace(' ', '_')
+    return value if value in {'basic', 'detailed', 'attribute_rich'} else 'detailed'
 
 
 def _normalize_crop_meta(crop_meta: Dict[str, Any] | None) -> Dict[str, float] | None:
@@ -128,7 +142,7 @@ def save_caption_from_path(
 ) -> Dict[str, Any] | None:
     root = get_library_root()
     category = (category or '').strip() or 'uncategorized'
-    src = Path(image_path)
+    src = _normalize_fs_path(image_path)
     if not src.exists():
         raise FileNotFoundError(f'Image not found: {image_path}')
     src_hash = sha256_file(src)
@@ -178,13 +192,13 @@ def save_caption_from_path(
 
 
 def dataset_txt_output_path(image_path: str | Path, input_root: str | Path, output_folder: str = '') -> Path:
-    img = Path(image_path)
+    img = _normalize_fs_path(image_path)
     out_root_raw = (output_folder or '').strip()
     if not out_root_raw:
         return img.with_suffix('.txt')
 
-    src_root = Path(input_root).expanduser()
-    out_root = Path(out_root_raw).expanduser()
+    src_root = _normalize_fs_path(input_root)
+    out_root = _normalize_fs_path(out_root_raw)
     out_root.mkdir(parents=True, exist_ok=True)
 
     try:
@@ -198,7 +212,7 @@ def dataset_txt_output_path(image_path: str | Path, input_root: str | Path, outp
 
 
 def image_files_in_folder(folder_path: str, recursive: bool = False, include_exts: Iterable[str] | None = None) -> List[Path]:
-    root = Path(folder_path).expanduser()
+    root = _normalize_fs_path(folder_path)
     if not root.exists() or not root.is_dir():
         raise FileNotFoundError('Input folder not found.')
     allowed = normalize_ext_list(include_exts)

@@ -26,6 +26,26 @@ BATCH_STATE_DIR.mkdir(parents=True, exist_ok=True)
 BATCH_POST_ACTION_COUNTDOWN = 60
 
 
+_ALLOWED_COMPONENT_TYPES = {'', 'face', 'person', 'outfit', 'pose', 'location', 'custom'}
+_ALLOWED_BATCH_CAPTION_MODES = {'full_image', 'face_only', 'person_only', 'outfit_only', 'pose_only', 'location_only'}
+_ALLOWED_DETAIL_LEVELS = {'basic', 'detailed', 'attribute_rich'}
+
+
+def _normalize_component_type(value: str) -> str:
+    value = (value or '').strip().lower().replace(' ', '_')
+    return value if value in _ALLOWED_COMPONENT_TYPES else ''
+
+
+def _normalize_caption_mode(value: str) -> str:
+    value = (value or 'full_image').strip().lower().replace(' ', '_')
+    return value if value in _ALLOWED_BATCH_CAPTION_MODES else 'full_image'
+
+
+def _normalize_detail_level(value: str) -> str:
+    value = (value or 'detailed').strip().lower().replace('-', '_').replace(' ', '_')
+    return value if value in _ALLOWED_DETAIL_LEVELS else 'detailed'
+
+
 def _state_path(job_id: str) -> Path:
     return BATCH_STATE_DIR / f'{job_id}.json'
 
@@ -379,8 +399,15 @@ async def run_batch_caption_job(job_id: str, params: dict) -> None:
                 prefix=params['prefix'],
                 suffix=params['suffix'],
                 output_style=params['output_style'],
+                caption_mode=params['caption_mode'],
+                detail_level=params['detail_level'],
             )
             caption_text = (result.get('text', '') or '').strip()
+            finish_reason = str(result.get('finish_reason', '') or '').strip().lower()
+            if not caption_text:
+                raise RuntimeError('No caption text was generated.')
+            if finish_reason == 'error' or caption_text.lower().startswith('vision error:') or caption_text == 'Invalid image file.':
+                raise RuntimeError(caption_text)
             if params['mode'] == 'dataset':
                 txt_path = dataset_txt_output_path(img, params['folder_path'], params['output_folder'])
                 if txt_path.exists() and params['skip_existing_txt'] and not params['overwrite_existing']:
@@ -407,6 +434,9 @@ async def run_batch_caption_job(job_id: str, params: dict) -> None:
                     prompt_style=params['prompt_style'],
                     finish_reason=result.get('finish_reason', ''),
                     settings=params['settings'],
+                    component_type=params['component_type'],
+                    caption_mode=params['caption_mode'],
+                    detail_level=params['detail_level'],
                 )
                 processed += 1
                 if rec is None:
@@ -534,12 +564,19 @@ def normalized_batch_params(*, model: str, mode: str, folder_path: str, category
     overwrite_existing: str, skip_existing_txt: str, skip_duplicates: str, recursive: str, include_exts: str,
     prompt_style: str, caption_length: str, custom_prompt: str, max_new_tokens: int, temperature: float,
     top_p: float, top_k: int, prefix: str, suffix: str, output_style: str, output_folder: str,
-    post_task_action: str,
+    component_type: str, caption_mode: str, detail_level: str, post_task_action: str,
     clamp_int, clamp_float) -> dict:
     max_new_tokens = clamp_int(max_new_tokens, 24, 1000, 160)
     temperature = clamp_float(temperature, 0.0, 1.5, 0.2)
     top_p = clamp_float(top_p, 0.0, 1.0, 0.9)
     top_k = clamp_int(top_k, 0, 200, 40)
+    caption_mode = _normalize_caption_mode(caption_mode)
+    component_type = _normalize_component_type(component_type)
+    detail_level = _normalize_detail_level(detail_level)
+    settings = settings_dict(max_new_tokens, temperature, top_p, top_k)
+    settings['caption_mode'] = caption_mode
+    settings['component_type'] = component_type
+    settings['detail_level'] = detail_level
     return {
         'model': model,
         'mode': (mode or 'dataset').strip().lower(),
@@ -563,6 +600,9 @@ def normalized_batch_params(*, model: str, mode: str, folder_path: str, category
         'suffix': suffix,
         'output_style': output_style,
         'output_folder': output_folder,
+        'component_type': component_type,
+        'caption_mode': caption_mode,
+        'detail_level': detail_level,
         'post_task_action': (post_task_action or 'none').strip().lower() or 'none',
-        'settings': settings_dict(max_new_tokens, temperature, top_p, top_k),
+        'settings': settings,
     }
