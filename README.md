@@ -329,30 +329,6 @@ Some features are still evolving, and the project is designed to grow around act
 
 ---
 
-## Screenshots
-
-Add screenshots or GIFs here later for:
-
-- Neo Library overview
-- Prompt Composer
-- Vault + Maps
-- Output Inspector
-- Neo Studio Prompt Studio
-- Neo Studio Caption Studio
-- targeted captioning
-- batch captioning
-- import / export
-
-Example placeholder layout:
-
-```md
-![Neo Library Overview](docs/images/neo-library-overview.png)
-![Prompt Composer](docs/images/prompt-composer.png)
-![Neo Studio Prompt Studio](docs/images/neo-studio-prompt-studio.png)
-```
-
----
-
 ## Project philosophy
 
 This tool was built around a simple idea:
