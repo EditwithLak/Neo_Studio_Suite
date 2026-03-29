@@ -450,6 +450,32 @@ def _caption_selection_changed(category: str, name: str, image_name: str):
     return resolve_media_path(rec.get('image_path') or '') or None, rec.get('caption') or '', _caption_meta(rec)
 
 
+def _caption_name_changed(category: str, name: str):
+    imgs = images_for_category('caption', category)
+    rec = find_caption(category, name, '')
+    selected_image = Path(rec.get('image_path') or '').name if rec else (imgs[0] if imgs else None)
+    return (
+        _dropdown_update(imgs, selected_image),
+        resolve_media_path(rec.get('image_path') or '') if rec else None,
+        (rec.get('caption') or '') if rec else '',
+        _caption_meta(rec),
+    )
+
+
+def _caption_image_changed(category: str, name: str, image_name: str):
+    names = names_for_category('caption', category)
+    rec = find_caption(category, '', image_name) or find_caption(category, name, '')
+    selected_name = (rec.get('name') or '').strip() if rec else ''
+    if not selected_name:
+        selected_name = name if name in names else (names[0] if names else None)
+    return (
+        _dropdown_update(names, selected_name),
+        resolve_media_path(rec.get('image_path') or '') if rec else None,
+        (rec.get('caption') or '') if rec else '',
+        _caption_meta(rec),
+    )
+
+
 def _prompt_refresh_payload() -> List[Any]:
     s2 = stats()
     cats_local = categories('prompt')
@@ -581,8 +607,8 @@ def build_caption_library_ui(positive_out):
 
         refresh.click(_refresh, outputs=[cap_category, cap_name, cap_image, preview, caption_box, meta_box, info, action_status], queue=False)
         cap_category.change(_caption_category_changed, inputs=[cap_category], outputs=[cap_name, cap_image, preview, caption_box, meta_box], queue=False)
-        cap_name.change(_caption_selection_changed, inputs=[cap_category, cap_name, cap_image], outputs=[preview, caption_box, meta_box], queue=False)
-        cap_image.change(_caption_selection_changed, inputs=[cap_category, cap_name, cap_image], outputs=[preview, caption_box, meta_box], queue=False)
+        cap_name.change(_caption_name_changed, inputs=[cap_category, cap_name], outputs=[cap_image, preview, caption_box, meta_box], queue=False)
+        cap_image.change(_caption_image_changed, inputs=[cap_category, cap_name, cap_image], outputs=[cap_name, preview, caption_box, meta_box], queue=False)
         cap_send_forge_btn.click(lambda text: '✅ Sent to Forge Positive.', inputs=[caption_box], outputs=[action_status], queue=False, _js=JS_FORGE_SET_POSITIVE)
         cap_send_composer_btn.click(_replace_positive, inputs=[caption_box], outputs=[positive_out, action_status], queue=False)
         cap_append_forge_btn.click(lambda text: '✅ Appended to Forge Positive.', inputs=[caption_box], outputs=[action_status], queue=False, _js=JS_FORGE_APPEND_POSITIVE)

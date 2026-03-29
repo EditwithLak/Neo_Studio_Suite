@@ -1306,6 +1306,48 @@ def build_prompt_builder_ui(queue_cb=None, clear_queue_cb=None):
                     out.sort(key=lambda x: _ps_norm_token(x[0]))
                     return out
 
+                def _cc_pack_item_value(rec: Dict[str, Any]) -> str:
+                    try:
+                        payload = {
+                            "name": (rec.get("name") or "").strip(),
+                            "desc": (rec.get("desc") or "").strip(),
+                            "aliases": [a.strip() for a in (rec.get("aliases") or []) if str(a).strip()],
+                            "subcategory": (rec.get("subcategory") or "").strip(),
+                        }
+                        return "CCKW:" + json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+                    except Exception:
+                        return (rec.get("name") or "").strip()
+
+                def _cc_unpack_item_value(val: str) -> Dict[str, Any]:
+                    raw = (val or "").strip()
+                    if not raw:
+                        return {}
+                    if raw.startswith("CCKW:"):
+                        try:
+                            data = json.loads(raw[5:])
+                            if isinstance(data, dict):
+                                return data
+                        except Exception:
+                            pass
+                    return {"name": raw, "desc": "", "aliases": [], "subcategory": ""}
+
+                def _cc_item_preview(item_val: str) -> str:
+                    rec = _cc_unpack_item_value(item_val)
+                    name = (rec.get("name") or "").strip()
+                    if not name:
+                        return ""
+                    desc = (rec.get("desc") or "").strip()
+                    aliases = ", ".join([a.strip() for a in (rec.get("aliases") or []) if str(a).strip()])
+                    sub = (rec.get("subcategory") or "").strip()
+                    bits = [f"**{name}**"]
+                    if sub:
+                        bits.append(f"Subcategory: `{sub}`")
+                    if aliases:
+                        bits.append(f"Aliases: `{aliases}`")
+                    if desc:
+                        bits.append(f"> {desc}")
+                    return "  \n".join(bits)
+
                 def _cc_item_choices(kind: str, q: str, source_file: str, entries: List[dict] | None = None) -> List[Tuple[str, str]]:
                     if not source_file:
                         return []
@@ -1342,16 +1384,21 @@ def build_prompt_builder_ui(queue_cb=None, clear_queue_cb=None):
                             if not rec:
                                 continue
                             nm = (rec.get("name") or "").strip()
+                            desc = (rec.get("desc") or "").strip()
                             if not nm or _cc_is_explicit(nm):
                                 continue
-                            hay = _ps_norm_token(nm + " " + " ".join(rec.get("aliases") or []) + " " + (rec.get("desc") or ""))
+                            hay = _ps_norm_token(nm + " " + " ".join(rec.get("aliases") or []) + " " + desc)
                             if qn and qn not in hay:
                                 continue
                             key = _cc_norm_piece(nm)
                             if key in seen:
                                 continue
                             seen.add(key)
-                            safe.append((nm, nm))
+                            label = nm
+                            if desc:
+                                snippet = desc if len(desc) <= 88 else (desc[:85].rstrip() + "…")
+                                label = f"{nm} — {snippet}"
+                            safe.append((label, _cc_pack_item_value(rec)))
                     safe.sort(key=lambda x: _ps_norm_token(x[0]))
                     return safe
 
@@ -1966,6 +2013,8 @@ def build_prompt_builder_ui(queue_cb=None, clear_queue_cb=None):
 
                 cc_search = gr.Textbox(label="Search in selected library", placeholder="type to filter…", lines=1)
                 cc_item_dd = gr.Dropdown(label="Pick item", choices=_cc_item_choices("kw", "", _cc_init_lib_val, _cc_init_entries) if _cc_init_lib_val else [], value=None)
+                cc_item_preview = gr.Markdown("")
+                cc_include_desc = gr.Checkbox(label="Include description after keyword", value=True)
 
                 with gr.Row():
                     cc_add_btn = gr.Button("➕ Add to character", scale=3)
@@ -2017,7 +2066,7 @@ def build_prompt_builder_ui(queue_cb=None, clear_queue_cb=None):
                 state[slot] = ""
                 return "", state, "🧼 Cleared."
 
-            def _cc_on_add(pick_kind: str, pick_mode: str, item_id: str, slot: str, state: dict, current: str):
+            def _cc_on_add(pick_kind: str, pick_mode: str, item_id: str, include_desc: bool, slot: str, state: dict, current: str):
                 if not item_id:
                     return current, state, "⚠️ Pick something first."
                 slot = (slot or "chr1").strip().lower()
@@ -2028,8 +2077,14 @@ def build_prompt_builder_ui(queue_cb=None, clear_queue_cb=None):
                 kind = (pick_kind or "kw").strip().lower()
                 mode = (pick_mode or "add").strip().lower()
 
-                text = (item_id or "").strip()
-                if _cc_is_explicit(text):
+                rec = _cc_unpack_item_value(item_id)
+                base_text = (rec.get("name") or item_id or "").strip()
+                desc = (rec.get("desc") or "").strip()
+                text = base_text
+                if include_desc and desc:
+                    text = f"{base_text}, {desc}" if base_text else desc
+
+                if _cc_is_explicit(base_text) or _cc_is_explicit(desc):
                     return current, state, "⚠️ That item is not available here."
 
                 if not text:
@@ -2060,8 +2115,9 @@ def build_prompt_builder_ui(queue_cb=None, clear_queue_cb=None):
                 _w.change(fn=_cc_refresh_items, inputs=[cc_pick_kind, cc_search, cc_library, cc_entries_state], outputs=[cc_item_dd])
 
             cc_slot.change(fn=_cc_on_slot_change, inputs=[cc_slot, cc_state], outputs=[cc_buffer])
+            cc_item_dd.change(fn=_cc_item_preview, inputs=[cc_item_dd], outputs=[cc_item_preview], queue=False)
             cc_clear_btn.click(fn=_cc_on_clear, inputs=[cc_slot, cc_state], outputs=[cc_buffer, cc_state, cc_status])
-            cc_add_btn.click(fn=_cc_on_add, inputs=[cc_pick_kind, cc_pick_mode, cc_item_dd, cc_slot, cc_state, cc_buffer], outputs=[cc_buffer, cc_state, cc_status])
+            cc_add_btn.click(fn=_cc_on_add, inputs=[cc_pick_kind, cc_pick_mode, cc_item_dd, cc_include_desc, cc_slot, cc_state, cc_buffer], outputs=[cc_buffer, cc_state, cc_status])
             cc_append_btn.click(fn=_cc_on_append, inputs=[positive_out, cc_slot, cc_insert_target, cc_state, cc_buffer], outputs=[positive_out, cc_state, cc_status])
             cc_save_btn.click(fn=_cc_save_current, inputs=[cc_save_name, cc_slot, cc_state, cc_buffer], outputs=[cc_saved_dd, cc_status])
             cc_load_btn.click(fn=_cc_load_saved, inputs=[cc_saved_dd, cc_slot, cc_state], outputs=[cc_buffer, cc_state, cc_status])
