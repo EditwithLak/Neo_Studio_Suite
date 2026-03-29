@@ -4,14 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Neo Studio</title>
-  <link rel="stylesheet" href="/static/neo_local.css" />
+  <link rel="stylesheet" href="{{ url_for('static', path='neo_local.css') }}?v=phase3a-20260328-1" />
 </head>
 <body>
   <div class="container">
     <div class="hero">
       <div>
-        <h1>Neo Studio</h1>
+        <div class="row" style="gap:10px;align-items:center;"><h1>Neo Studio</h1><span class="badge ui-build-badge" id="ui-build-badge">Reliability Upgrade · Phase 3A</span></div>
         <p>Generate prompts, caption images, manage presets, and save reusable entries into Neo Library Data.</p>
+        <div class="mini-note" style="margin-top:8px;">This build adds interrupted batch recovery, stronger checkpoint safety, and live batch ETA in the title area.</div>
       </div>
       <div class="stats-wrap">
         <div>
@@ -95,19 +96,25 @@
           </div>
         </div>
 
-        <div class="card-lite" style="margin-top:14px;">
-          <div class="row-between">
+        <details class="accordion-block" data-accordion-id="prompt-recent-workspace" data-default-open="false" style="margin-top:14px;">
+          <summary class="accordion-summary">
             <div>
-              <h3 style="margin:0;">Recent Workspace</h3>
-              <div class="muted small">Jump back into recent prompts, captions, characters, presets, and recovered metadata.</div>
+              <div class="accordion-title">Recent Workspace</div>
+              <div class="accordion-hint">Jump back into recent prompts, captions, characters, presets, and recovered metadata.</div>
             </div>
-            <div class="row">
-              <button class="btn" id="btn-refresh-recent-items" type="button">Refresh recents</button>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body">
+            <div class="row-between">
+              <div class="muted small">Quick jump back into your latest working items.</div>
+              <div class="row">
+                <button class="btn" id="btn-refresh-recent-items" type="button">Refresh recents</button>
+              </div>
             </div>
+            <div class="status" id="recent-items-status" style="margin-top:10px;"></div>
+            <div class="recent-grid" id="recent-items-grid" style="margin-top:14px;"></div>
           </div>
-          <div class="status" id="recent-items-status" style="margin-top:10px;"></div>
-          <div class="recent-grid" id="recent-items-grid" style="margin-top:14px;"></div>
-        </div>
+        </details>
 
         <label for="prompt-idea">Idea / source prompt</label>
         <textarea id="prompt-idea" placeholder="Describe the scene, concept, or paste an existing prompt..."></textarea>
@@ -159,37 +166,46 @@
           <span class="status" id="prompt-preset-status"></span>
         </div>
 
-        <div class="card-lite" style="margin-top:14px;">
-          <div class="row-between">
-            <h3 style="margin:0;">Prompt preset details</h3>
-            <span class="status" id="prompt-preset-meta-status"></span>
-          </div>
-          <div class="grid grid-3" style="margin-top:14px;">
+        <details class="accordion-block" data-accordion-id="prompt-preset-details" data-default-open="true" style="margin-top:14px;">
+          <summary class="accordion-summary">
             <div>
-              <label for="prompt-preset-recent">Recent presets</label>
-              <select id="prompt-preset-recent"></select>
+              <div class="accordion-title">Prompt preset details</div>
+              <div class="accordion-hint">Compare, favorite, duplicate, export, and annotate prompt presets.</div>
             </div>
-            <div>
-              <label for="prompt-preset-compare">Compare against</label>
-              <select id="prompt-preset-compare"></select>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body card-lite-soft">
+            <div class="row-between">
+              <div class="muted small">Preset metadata tools</div>
+              <span class="status" id="prompt-preset-meta-status"></span>
             </div>
-            <div>
-              <label for="prompt-preset-group">Preset group / folder</label>
-              <input id="prompt-preset-group" type="text" placeholder="e.g. SDXL safe baseline" />
+            <div class="grid grid-3" style="margin-top:14px;">
+              <div>
+                <label for="prompt-preset-recent">Recent presets</label>
+                <select id="prompt-preset-recent"></select>
+              </div>
+              <div>
+                <label for="prompt-preset-compare">Compare against</label>
+                <select id="prompt-preset-compare"></select>
+              </div>
+              <div>
+                <label for="prompt-preset-group">Preset group / folder</label>
+                <input id="prompt-preset-group" type="text" placeholder="e.g. SDXL safe baseline" />
+              </div>
             </div>
+            <label for="prompt-preset-notes" style="margin-top:14px;">Preset notes / intended use</label>
+            <textarea id="prompt-preset-notes" placeholder="What this preset is best for..."></textarea>
+            <div class="row" style="margin-top:14px;">
+              <label><input id="prompt-preset-favorite" type="checkbox" /> Favorite preset</label>
+              <button class="btn" id="btn-toggle-prompt-preset-favorite" type="button">Toggle favorite</button>
+              <button class="btn" id="btn-duplicate-prompt-preset" type="button">Duplicate preset</button>
+              <button class="btn" id="btn-compare-prompt-preset" type="button">Compare presets</button>
+              <button class="btn" id="btn-export-prompt-preset" type="button">Export selected preset</button>
+            </div>
+            <div class="mini-note" id="prompt-preset-meta" style="margin-top:10px;"></div>
+            <div class="mini-note hidden compare-output" id="prompt-preset-compare-output" style="margin-top:10px;"></div>
           </div>
-          <label for="prompt-preset-notes" style="margin-top:14px;">Preset notes / intended use</label>
-          <textarea id="prompt-preset-notes" placeholder="What this preset is best for..."></textarea>
-          <div class="row" style="margin-top:14px;">
-            <label><input id="prompt-preset-favorite" type="checkbox" /> Favorite preset</label>
-            <button class="btn" id="btn-toggle-prompt-preset-favorite" type="button">Toggle favorite</button>
-            <button class="btn" id="btn-duplicate-prompt-preset" type="button">Duplicate preset</button>
-            <button class="btn" id="btn-compare-prompt-preset" type="button">Compare presets</button>
-            <button class="btn" id="btn-export-prompt-preset" type="button">Export selected preset</button>
-          </div>
-          <div class="mini-note" id="prompt-preset-meta" style="margin-top:10px;"></div>
-          <div class="mini-note hidden compare-output" id="prompt-preset-compare-output" style="margin-top:10px;"></div>
-        </div>
+        </details>
 
         <div class="row" style="margin-top:14px;">
           <button class="btn btn-primary" id="btn-generate-prompt" type="button">Generate prompt</button>
@@ -225,28 +241,38 @@
         <div class="stack hidden" id="prompt-variation-results" style="margin-top:14px;"></div>
 
         <div class="divider"></div>
-        <h2>Prompt QA / cleanup</h2>
-        <div class="row">
-          <button class="btn" id="btn-analyze-prompt" type="button">Analyze prompt</button>
-          <label class="row small" style="margin:0; gap:8px;"><input id="prompt-qa-auto" type="checkbox" /> Auto-run on prompt changes</label>
-          <button class="btn" id="btn-dedupe-tags" type="button">Remove duplicate tags</button>
-          <button class="btn" id="btn-sort-tags" type="button">Sort tags by importance</button>
-          <button class="btn" id="btn-shorten-prompt" type="button">Shorten</button>
-          <button class="btn" id="btn-expand-prompt" type="button">Expand</button>
-          <button class="btn" id="btn-fix-contradictions" type="button">Fix contradictions</button>
-          <button class="btn" id="btn-convert-style" type="button">Prose ↔ tags</button>
-        </div>
-        <div class="status" id="prompt-qa-status"></div>
-        <div class="card-lite" style="margin-top:12px;">
-          <div class="row-between">
+        <details class="accordion-block" data-accordion-id="prompt-qa-cleanup" data-default-open="false">
+          <summary class="accordion-summary">
             <div>
-              <div class="small" style="font-weight:700;">QA summary</div>
-              <div class="mini-note" id="prompt-qa-summary">Run Prompt QA to catch messy structure before you save or send the prompt.</div>
+              <div class="accordion-title">Prompt QA / cleanup</div>
+              <div class="accordion-hint">Analyze structure, clean tags, and fix contradictions without hiding the main prompt workspace.</div>
             </div>
-            <div class="row small" id="prompt-qa-stats"></div>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body">
+            <div class="row">
+              <button class="btn" id="btn-analyze-prompt" type="button">Analyze prompt</button>
+              <label class="row small" style="margin:0; gap:8px;"><input id="prompt-qa-auto" type="checkbox" /> Auto-run on prompt changes</label>
+              <button class="btn" id="btn-dedupe-tags" type="button">Remove duplicate tags</button>
+              <button class="btn" id="btn-sort-tags" type="button">Sort tags by importance</button>
+              <button class="btn" id="btn-shorten-prompt" type="button">Shorten</button>
+              <button class="btn" id="btn-expand-prompt" type="button">Expand</button>
+              <button class="btn" id="btn-fix-contradictions" type="button">Fix contradictions</button>
+              <button class="btn" id="btn-convert-style" type="button">Prose ↔ tags</button>
+            </div>
+            <div class="status" id="prompt-qa-status" style="margin-top:12px;"></div>
+            <div class="card-lite" style="margin-top:12px;">
+              <div class="row-between">
+                <div>
+                  <div class="small" style="font-weight:700;">QA summary</div>
+                  <div class="mini-note" id="prompt-qa-summary">Run Prompt QA to catch messy structure before you save or send the prompt.</div>
+                </div>
+                <div class="row small" id="prompt-qa-stats"></div>
+              </div>
+              <div id="prompt-qa-list" class="prompt-qa-list" style="margin-top:12px;"></div>
+            </div>
           </div>
-          <div id="prompt-qa-list" class="prompt-qa-list" style="margin-top:12px;"></div>
-        </div>
+        </details>
 
         <div class="divider"></div>
         <h2>Save Prompt</h2>
@@ -274,84 +300,98 @@
 
 
         <div class="divider"></div>
-        <h2>Prompt Bundles / Projects</h2>
-        <div class="card-lite">
-          <div class="muted">Bundle management has moved to <strong>Neo Library → Prompt Composer → Prompt Bundles / Projects</strong> inside Forge Neo, where bundles can be loaded directly into your generation workflow.</div>
-        </div>
+        <details class="accordion-block" data-accordion-id="prompt-saved-prompts" data-default-open="false">
+          <summary class="accordion-summary">
+            <div>
+              <div class="accordion-title">Saved Prompts</div>
+              <div class="accordion-hint">Load, improve, update, or delete stored prompt entries without crowding the main generator.</div>
+            </div>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body">
+            <div class="grid grid-2">
+              <div>
+                <label for="saved-prompt-category">Category</label>
+                <select id="saved-prompt-category"></select>
+              </div>
+              <div>
+                <label for="saved-prompt-id">Prompt entry</label>
+                <select id="saved-prompt-id"></select>
+              </div>
+            </div>
+            <div class="row" style="margin-top:14px;">
+              <button class="btn" id="btn-load-prompt" type="button">Load selected</button>
+              <button class="btn" id="btn-improve-loaded" type="button">Improve loaded prompt</button>
+              <button class="btn btn-secondary" id="btn-update-loaded" type="button">Update loaded prompt</button>
+              <button class="btn btn-danger" id="btn-delete-loaded" type="button">Delete loaded prompt</button>
+            </div>
+            <div class="grid grid-2" style="margin-top:14px;">
+              <div>
+                <label for="prompt-improve-mode">Improve with LLM</label>
+                <select id="prompt-improve-mode">
+                  <option>Enhance clarity</option>
+                  <option>Make more descriptive</option>
+                  <option>Convert to SD tags</option>
+                  <option>Convert to descriptive prose</option>
+                  <option>Make more cinematic</option>
+                  <option>Tighten / shorten</option>
+                  <option>Preserve meaning, improve wording</option>
+                </select>
+              </div>
+              <div class="status" id="saved-prompt-status" style="align-self:end;"></div>
+            </div>
+          </div>
+        </details>
 
         <div class="divider"></div>
-        <h2>Saved Prompts</h2>
-        <div class="grid grid-2">
-          <div>
-            <label for="saved-prompt-category">Category</label>
-            <select id="saved-prompt-category"></select>
+        <details class="accordion-block" data-accordion-id="prompt-character-library" data-default-open="true">
+          <summary class="accordion-summary">
+            <div>
+              <div class="accordion-title">Character Library</div>
+              <div class="accordion-hint">Load, refine, and reuse saved character sheets inside Prompt Studio.</div>
+            </div>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body">
+            <div class="grid grid-2">
+              <div>
+                <label for="saved-character-name">Saved character</label>
+                <select id="saved-character-name"></select>
+              </div>
+              <div>
+                <label for="character-improve-mode">Character refine mode</label>
+                <select id="character-improve-mode">
+                  <option>Enhance clarity</option>
+                  <option>Expand details</option>
+                  <option>Make more prompt-ready</option>
+                  <option>Make more consistent</option>
+                  <option>Create alternate version</option>
+                  <option>Tighten / shorten</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-2" style="margin-top:14px;">
+              <div>
+                <label for="character-name">Character name</label>
+                <input id="character-name" type="text" placeholder="e.g. Hero_Male_01" />
+              </div>
+              <div class="timer-row" style="justify-content:flex-start; align-items:end;">
+                <span class="timer-pill" id="character-elapsed">Elapsed: 00:00</span>
+              </div>
+            </div>
+            <label for="character-content" style="margin-top:14px;">Character content</label>
+            <textarea id="character-content" placeholder="Saved character text appears here..."></textarea>
+            <div class="counter" id="character-content-counter">0 chars</div>
+            <div class="row" style="margin-top:14px;">
+              <button class="btn" id="btn-load-character" type="button">Load selected</button>
+              <button class="btn btn-secondary" id="btn-save-character" type="button">Save / update character</button>
+              <button class="btn" id="btn-improve-character" type="button">Improve character</button>
+              <button class="btn" id="btn-character-to-idea" type="button">Use as prompt idea</button>
+              <button class="btn btn-danger" id="btn-delete-character" type="button">Delete selected</button>
+            </div>
+            <div class="status" id="character-status"></div>
           </div>
-          <div>
-            <label for="saved-prompt-id">Prompt entry</label>
-            <select id="saved-prompt-id"></select>
-          </div>
-        </div>
-        <div class="row" style="margin-top:14px;">
-          <button class="btn" id="btn-load-prompt" type="button">Load selected</button>
-          <button class="btn" id="btn-improve-loaded" type="button">Improve loaded prompt</button>
-          <button class="btn btn-secondary" id="btn-update-loaded" type="button">Update loaded prompt</button>
-          <button class="btn btn-danger" id="btn-delete-loaded" type="button">Delete loaded prompt</button>
-        </div>
-        <div class="grid grid-2" style="margin-top:14px;">
-          <div>
-            <label for="prompt-improve-mode">Improve with LLM</label>
-            <select id="prompt-improve-mode">
-              <option>Enhance clarity</option>
-              <option>Make more descriptive</option>
-              <option>Convert to SD tags</option>
-              <option>Convert to descriptive prose</option>
-              <option>Make more cinematic</option>
-              <option>Tighten / shorten</option>
-              <option>Preserve meaning, improve wording</option>
-            </select>
-          </div>
-          <div class="status" id="saved-prompt-status" style="align-self:end;"></div>
-        </div>
-
-        <div class="divider"></div>
-        <h2>Character Library</h2>
-        <div class="grid grid-2">
-          <div>
-            <label for="saved-character-name">Saved character</label>
-            <select id="saved-character-name"></select>
-          </div>
-          <div>
-            <label for="character-improve-mode">Character refine mode</label>
-            <select id="character-improve-mode">
-              <option>Enhance clarity</option>
-              <option>Expand details</option>
-              <option>Make more prompt-ready</option>
-              <option>Make more consistent</option>
-              <option>Create alternate version</option>
-              <option>Tighten / shorten</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid grid-2" style="margin-top:14px;">
-          <div>
-            <label for="character-name">Character name</label>
-            <input id="character-name" type="text" placeholder="e.g. Hero_Male_01" />
-          </div>
-          <div class="timer-row" style="justify-content:flex-start; align-items:end;">
-            <span class="timer-pill" id="character-elapsed">Elapsed: 00:00</span>
-          </div>
-        </div>
-        <label for="character-content" style="margin-top:14px;">Character content</label>
-        <textarea id="character-content" placeholder="Saved character text appears here..."></textarea>
-        <div class="counter" id="character-content-counter">0 chars</div>
-        <div class="row" style="margin-top:14px;">
-          <button class="btn" id="btn-load-character" type="button">Load selected</button>
-          <button class="btn btn-secondary" id="btn-save-character" type="button">Save / update character</button>
-          <button class="btn" id="btn-improve-character" type="button">Improve character</button>
-          <button class="btn" id="btn-character-to-idea" type="button">Use as prompt idea</button>
-          <button class="btn btn-danger" id="btn-delete-character" type="button">Delete selected</button>
-        </div>
-        <div class="status" id="character-status"></div>
+        </details>
       </div>
     </section>
 
@@ -500,37 +540,46 @@
           <span class="status" id="caption-preset-status"></span>
         </div>
 
-        <div class="card-lite" style="margin-top:14px;">
-          <div class="row-between">
-            <h3 style="margin:0;">Caption preset details</h3>
-            <span class="status" id="caption-preset-meta-status"></span>
-          </div>
-          <div class="grid grid-3" style="margin-top:14px;">
+        <details class="accordion-block" data-accordion-id="caption-preset-details" data-default-open="true" style="margin-top:14px;">
+          <summary class="accordion-summary">
             <div>
-              <label for="caption-preset-recent">Recent presets</label>
-              <select id="caption-preset-recent"></select>
+              <div class="accordion-title">Caption preset details</div>
+              <div class="accordion-hint">Compare, favorite, duplicate, export, and annotate caption presets.</div>
             </div>
-            <div>
-              <label for="caption-preset-compare">Compare against</label>
-              <select id="caption-preset-compare"></select>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body card-lite-soft">
+            <div class="row-between">
+              <div class="muted small">Preset metadata tools</div>
+              <span class="status" id="caption-preset-meta-status"></span>
             </div>
-            <div>
-              <label for="caption-preset-group">Preset group / folder</label>
-              <input id="caption-preset-group" type="text" placeholder="e.g. Dataset anime long" />
+            <div class="grid grid-3" style="margin-top:14px;">
+              <div>
+                <label for="caption-preset-recent">Recent presets</label>
+                <select id="caption-preset-recent"></select>
+              </div>
+              <div>
+                <label for="caption-preset-compare">Compare against</label>
+                <select id="caption-preset-compare"></select>
+              </div>
+              <div>
+                <label for="caption-preset-group">Preset group / folder</label>
+                <input id="caption-preset-group" type="text" placeholder="e.g. Dataset anime long" />
+              </div>
             </div>
+            <label for="caption-preset-notes" style="margin-top:14px;">Preset notes / intended use</label>
+            <textarea id="caption-preset-notes" placeholder="What this caption preset is best for..."></textarea>
+            <div class="row" style="margin-top:14px;">
+              <label><input id="caption-preset-favorite" type="checkbox" /> Favorite preset</label>
+              <button class="btn" id="btn-toggle-caption-preset-favorite" type="button">Toggle favorite</button>
+              <button class="btn" id="btn-duplicate-caption-preset" type="button">Duplicate preset</button>
+              <button class="btn" id="btn-compare-caption-preset" type="button">Compare presets</button>
+              <button class="btn" id="btn-export-caption-preset" type="button">Export selected preset</button>
+            </div>
+            <div class="mini-note" id="caption-preset-meta" style="margin-top:10px;"></div>
+            <div class="mini-note hidden compare-output" id="caption-preset-compare-output" style="margin-top:10px;"></div>
           </div>
-          <label for="caption-preset-notes" style="margin-top:14px;">Preset notes / intended use</label>
-          <textarea id="caption-preset-notes" placeholder="What this caption preset is best for..."></textarea>
-          <div class="row" style="margin-top:14px;">
-            <label><input id="caption-preset-favorite" type="checkbox" /> Favorite preset</label>
-            <button class="btn" id="btn-toggle-caption-preset-favorite" type="button">Toggle favorite</button>
-            <button class="btn" id="btn-duplicate-caption-preset" type="button">Duplicate preset</button>
-            <button class="btn" id="btn-compare-caption-preset" type="button">Compare presets</button>
-            <button class="btn" id="btn-export-caption-preset" type="button">Export selected preset</button>
-          </div>
-          <div class="mini-note" id="caption-preset-meta" style="margin-top:10px;"></div>
-          <div class="mini-note hidden compare-output" id="caption-preset-compare-output" style="margin-top:10px;"></div>
-        </div>
+        </details>
 
         <div class="row" style="margin-top:14px;">
           <button class="btn btn-primary" id="btn-caption-image" type="button">Caption image</button>
@@ -548,305 +597,449 @@
         <div class="counter" id="caption-output-counter">0 chars</div>
 
         <div class="divider"></div>
-        <h2>Save Captioned Image</h2>
-        <div class="grid grid-4">
-          <div>
-            <label for="caption-name">Entry name</label>
-            <input id="caption-name" type="text" placeholder="Entry Name" />
-          </div>
-          <div>
-            <label for="caption-category">Category</label>
-            <select id="caption-category"></select>
-          </div>
-          <div>
-            <label for="caption-category-new">New category (optional)</label>
-            <input id="caption-category-new" type="text" placeholder="New category" />
-          </div>
-          <div>
-            <label for="caption-save-component-type">Component type</label>
-            <select id="caption-save-component-type">
-              <option value="">None / general caption</option>
-              <option value="face">Face</option>
-              <option value="person">Person / character</option>
-              <option value="outfit">Outfit</option>
-              <option value="pose">Pose</option>
-              <option value="location">Location</option>
-              <option value="custom">Custom</option>
-            </select>
-          </div>
-        </div>
-        <div class="mini-note" id="caption-save-mode-summary" style="margin-top:10px;">This save will remember the current caption mode, detail level, and crop, if used.</div>
-        <label for="caption-notes" style="margin-top:14px;">Notes</label>
-        <textarea id="caption-notes" placeholder="Notes (optional)"></textarea>
-        <input type="hidden" id="temp-image-id" />
-        <div class="row" style="margin-top:14px;">
-          <button class="btn btn-secondary" id="btn-save-caption" type="button">Save image + caption</button>
-          <span class="status" id="caption-save-status"></span>
-        </div>
-
-
-        <div class="divider"></div>
-        <h2>Saved Captions Browser</h2>
-        <div class="grid grid-5">
-          <div>
-            <label for="caption-browser-query">Search</label>
-            <input id="caption-browser-query" type="text" placeholder="Search saved captions..." />
-          </div>
-          <div>
-            <label for="caption-browser-category">Category</label>
-            <select id="caption-browser-category"></select>
-          </div>
-          <div>
-            <label for="caption-browser-model">Model</label>
-            <input id="caption-browser-model" type="text" placeholder="Optional model filter" />
-          </div>
-          <div>
-            <label for="caption-browser-style">Style</label>
-            <input id="caption-browser-style" type="text" placeholder="Optional style filter" />
-          </div>
-          <div>
-            <label for="caption-browser-component">Component</label>
-            <select id="caption-browser-component">
-              <option value="">All captions</option>
-              <option value="face">Face</option>
-              <option value="person">Person / character</option>
-              <option value="outfit">Outfit</option>
-              <option value="pose">Pose</option>
-              <option value="location">Location</option>
-              <option value="custom">Custom</option>
-            </select>
-          </div>
-        </div>
-        <div class="grid grid-3" style="margin-top:14px;">
-          <div>
-            <label for="caption-browser-date-from">Updated from</label>
-            <input id="caption-browser-date-from" type="date" />
-          </div>
-          <div>
-            <label for="caption-browser-date-to">Updated to</label>
-            <input id="caption-browser-date-to" type="date" />
-          </div>
-          <div style="display:flex; align-items:end; gap:12px;">
-            <button class="btn" id="btn-refresh-caption-browser" type="button">Refresh browser</button>
-            <button class="btn" id="btn-clear-caption-browser" type="button">Clear filters</button>
-          </div>
-        </div>
-        <div class="status" id="caption-browser-status" style="margin-top:12px;"></div>
-        <div class="caption-browser-grid" id="caption-browser-grid" style="margin-top:14px;"></div>
-
-        <div class="card-lite hidden" id="caption-editor-wrap" style="margin-top:14px;">
-          <div class="row-between">
-            <h3 style="margin:0;">Caption editor</h3>
-            <div class="row">
-              <button class="btn" id="btn-preview-caption-image" type="button">Preview full image</button>
-              <button class="btn" id="btn-send-caption-to-prompt" type="button">Send to Prompt Studio</button>
-              <button class="btn" id="btn-caption-to-prompt" type="button">Duplicate as prompt</button>
-              <button class="btn btn-secondary" id="btn-update-caption-record" type="button">Update caption</button>
-              <button class="btn btn-danger" id="btn-delete-caption-record" type="button">Delete caption</button>
-            </div>
-          </div>
-          <div class="grid grid-4" style="margin-top:14px;">
+        <details class="accordion-block" data-accordion-id="caption-save-captioned-image" data-default-open="false">
+          <summary class="accordion-summary">
             <div>
-              <label for="caption-editor-name">Entry name</label>
-              <input id="caption-editor-name" type="text" />
+              <div class="accordion-title">Save Captioned Image</div>
+              <div class="accordion-hint">Store the current caption, crop metadata, and image into Neo Library Data.</div>
             </div>
-            <div>
-              <label for="caption-editor-category">Category</label>
-              <select id="caption-editor-category"></select>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body">
+            <div class="grid grid-4">
+              <div>
+                <label for="caption-name">Entry name</label>
+                <input id="caption-name" type="text" placeholder="Entry Name" />
+              </div>
+              <div>
+                <label for="caption-category">Category</label>
+                <select id="caption-category"></select>
+              </div>
+              <div>
+                <label for="caption-category-new">New category (optional)</label>
+                <input id="caption-category-new" type="text" placeholder="New category" />
+              </div>
+              <div>
+                <label for="caption-save-component-type">Component type</label>
+                <select id="caption-save-component-type">
+                  <option value="">None / general caption</option>
+                  <option value="face">Face</option>
+                  <option value="person">Person / character</option>
+                  <option value="outfit">Outfit</option>
+                  <option value="pose">Pose</option>
+                  <option value="location">Location</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
             </div>
-            <div>
-              <label for="caption-editor-model">Model</label>
-              <input id="caption-editor-model" type="text" />
-            </div>
-            <div>
-              <label for="caption-editor-component-type">Component type</label>
-              <select id="caption-editor-component-type">
-                <option value="">None / general caption</option>
-                <option value="face">Face</option>
-                <option value="outfit">Outfit</option>
-                <option value="pose">Pose</option>
-                <option value="location">Location</option>
-                <option value="custom">Custom</option>
-              </select>
+            <div class="mini-note" id="caption-save-mode-summary" style="margin-top:10px;">This save will remember the current caption mode, detail level, and crop, if used.</div>
+            <label for="caption-notes" style="margin-top:14px;">Notes</label>
+            <textarea id="caption-notes" placeholder="Notes (optional)"></textarea>
+            <input type="hidden" id="temp-image-id" />
+            <div class="row" style="margin-top:14px;">
+              <button class="btn btn-secondary" id="btn-save-caption" type="button">Save image + caption</button>
+              <span class="status" id="caption-save-status"></span>
             </div>
           </div>
-          <div class="grid grid-4" style="margin-top:14px;">
-            <div>
-              <label for="caption-editor-style">Style</label>
-              <input id="caption-editor-style" type="text" />
-            </div>
-            <div>
-              <label for="caption-editor-mode">Mode</label>
-              <input id="caption-editor-mode" type="text" readonly />
-            </div>
-            <div>
-              <label for="caption-editor-detail-level">Detail level</label>
-              <input id="caption-editor-detail-level" type="text" readonly />
-            </div>
-            <div>
-              <label for="caption-editor-updated">Updated</label>
-              <input id="caption-editor-updated" type="text" readonly />
-            </div>
-          </div>
-          <div class="mini-note" id="caption-editor-crop-summary" style="margin-top:10px;"></div>
-          <label for="caption-editor-caption" style="margin-top:14px;">Caption</label>
-          <textarea id="caption-editor-caption" placeholder="Edit saved caption here..."></textarea>
-          <label for="caption-editor-notes" style="margin-top:14px;">Notes</label>
-          <textarea id="caption-editor-notes" placeholder="Edit notes here..."></textarea>
-          <input type="hidden" id="caption-editor-id" />
-          <input type="hidden" id="caption-editor-image-url" />
-          <div class="status" id="caption-editor-status" style="margin-top:10px;"></div>
-        </div>
+        </details>
 
         <div class="divider"></div>
-        <h2>Prompt Components</h2>
-        <div class="mini-note" style="margin-top:0;">Save targeted captions as face / outfit / pose / location components, then combine them into a new prompt draft.</div>
-        <div class="grid grid-4" style="margin-top:14px;">
-          <div>
-            <label for="component-browser-query">Search components</label>
-            <input id="component-browser-query" type="text" placeholder="Search saved components..." />
+        <details class="accordion-block" data-accordion-id="caption-saved-browser" data-default-open="false">
+          <summary class="accordion-summary">
+            <div>
+              <div class="accordion-title">Saved Captions Browser</div>
+              <div class="accordion-hint">Search, sort, page through, edit, preview, and send saved captions into Prompt Studio.</div>
+            </div>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body browser-body">
+            <div class="grid grid-5 browser-toolbar browser-toolbar-primary">
+              <div>
+                <label for="caption-browser-query">Search</label>
+                <input id="caption-browser-query" type="text" placeholder="Search saved captions..." />
+              </div>
+              <div>
+                <label for="caption-browser-category">Category</label>
+                <select id="caption-browser-category"></select>
+              </div>
+              <div>
+                <label for="caption-browser-model">Model</label>
+                <input id="caption-browser-model" type="text" placeholder="Optional model filter" />
+              </div>
+              <div>
+                <label for="caption-browser-style">Style</label>
+                <input id="caption-browser-style" type="text" placeholder="Optional style filter" />
+              </div>
+              <div>
+                <label for="caption-browser-component">Component</label>
+                <select id="caption-browser-component">
+                  <option value="">All captions</option>
+                  <option value="face">Face</option>
+                  <option value="person">Person / character</option>
+                  <option value="outfit">Outfit</option>
+                  <option value="pose">Pose</option>
+                  <option value="location">Location</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+            </div>
+            <div class="grid grid-5 browser-toolbar browser-toolbar-secondary" style="margin-top:14px;">
+              <div>
+                <label for="caption-browser-date-from">Updated from</label>
+                <input id="caption-browser-date-from" type="date" />
+              </div>
+              <div>
+                <label for="caption-browser-date-to">Updated to</label>
+                <input id="caption-browser-date-to" type="date" />
+              </div>
+              <div>
+                <label for="caption-browser-sort">Sort</label>
+                <select id="caption-browser-sort">
+                  <option value="newest">Newest</option>
+                  <option value="oldest">Oldest</option>
+                  <option value="az">A–Z</option>
+                </select>
+              </div>
+              <div>
+                <label for="caption-browser-page-size">Items per page</label>
+                <select id="caption-browser-page-size">
+                  <option value="10">10</option>
+                  <option value="20" selected>20</option>
+                  <option value="50">50</option>
+                </select>
+              </div>
+              <div class="browser-action-row">
+                <button class="btn" id="btn-refresh-caption-browser" type="button">Refresh browser</button>
+                <button class="btn" id="btn-clear-caption-browser" type="button">Clear filters</button>
+              </div>
+            </div>
+            <div class="row-between browser-toolbar browser-toolbar-meta" style="margin-top:12px; gap:12px; align-items:center;">
+              <div>
+                <div class="status" id="caption-browser-status"></div>
+                <div class="badge" style="margin-top:8px;">Paged browser · search → sort → paginate</div>
+                <div class="mini-note" id="caption-browser-result-summary" style="margin-top:6px;">Showing 0-0 of 0</div>
+              </div>
+              <div class="row caption-browser-pager">
+                <button class="btn" id="btn-caption-browser-prev" type="button">Prev</button>
+                <span class="timer-pill" id="caption-browser-page-indicator">Page 1 of 1</span>
+                <button class="btn" id="btn-caption-browser-next" type="button">Next</button>
+              </div>
+            </div>
+            <div class="caption-browser-grid" id="caption-browser-grid" style="margin-top:14px;"></div>
+
+            <div class="card-lite hidden" id="caption-editor-wrap" style="margin-top:14px;">
+              <div class="row-between">
+                <h3 style="margin:0;">Caption editor</h3>
+                <div class="row">
+                  <button class="btn" id="btn-preview-caption-image" type="button">Preview full image</button>
+                  <button class="btn" id="btn-send-caption-to-prompt" type="button">Send to Prompt Studio</button>
+                  <button class="btn" id="btn-caption-to-prompt" type="button">Duplicate as prompt</button>
+                  <button class="btn btn-secondary" id="btn-update-caption-record" type="button">Update caption</button>
+                  <button class="btn btn-danger" id="btn-delete-caption-record" type="button">Delete caption</button>
+                </div>
+              </div>
+              <div class="grid grid-4" style="margin-top:14px;">
+                <div>
+                  <label for="caption-editor-name">Entry name</label>
+                  <input id="caption-editor-name" type="text" />
+                </div>
+                <div>
+                  <label for="caption-editor-category">Category</label>
+                  <select id="caption-editor-category"></select>
+                </div>
+                <div>
+                  <label for="caption-editor-model">Model</label>
+                  <input id="caption-editor-model" type="text" />
+                </div>
+                <div>
+                  <label for="caption-editor-component-type">Component type</label>
+                  <select id="caption-editor-component-type">
+                    <option value="">None / general caption</option>
+                    <option value="face">Face</option>
+                    <option value="outfit">Outfit</option>
+                    <option value="pose">Pose</option>
+                    <option value="location">Location</option>
+                    <option value="custom">Custom</option>
+                  </select>
+                </div>
+              </div>
+              <div class="grid grid-4" style="margin-top:14px;">
+                <div>
+                  <label for="caption-editor-style">Style</label>
+                  <input id="caption-editor-style" type="text" />
+                </div>
+                <div>
+                  <label for="caption-editor-mode">Mode</label>
+                  <input id="caption-editor-mode" type="text" readonly />
+                </div>
+                <div>
+                  <label for="caption-editor-detail-level">Detail level</label>
+                  <input id="caption-editor-detail-level" type="text" readonly />
+                </div>
+                <div>
+                  <label for="caption-editor-updated">Updated</label>
+                  <input id="caption-editor-updated" type="text" readonly />
+                </div>
+              </div>
+              <div class="mini-note" id="caption-editor-crop-summary" style="margin-top:10px;"></div>
+              <label for="caption-editor-caption" style="margin-top:14px;">Caption</label>
+              <textarea id="caption-editor-caption" placeholder="Edit saved caption here..."></textarea>
+              <label for="caption-editor-notes" style="margin-top:14px;">Notes</label>
+              <textarea id="caption-editor-notes" placeholder="Edit notes here..."></textarea>
+              <input type="hidden" id="caption-editor-id" />
+              <input type="hidden" id="caption-editor-image-url" />
+              <div class="status" id="caption-editor-status" style="margin-top:10px;"></div>
+            </div>
           </div>
-          <div>
-            <label for="component-browser-category">Category</label>
-            <select id="component-browser-category"></select>
-          </div>
-          <div>
-            <label for="component-browser-type">Component type</label>
-            <select id="component-browser-type">
-              <option value="">All component types</option>
-              <option value="face">Face</option>
-              <option value="person">Person / character</option>
-              <option value="outfit">Outfit</option>
-              <option value="pose">Pose</option>
-              <option value="location">Location</option>
-              <option value="custom">Custom</option>
-            </select>
-          </div>
-          <div style="display:flex; align-items:end; gap:12px;">
-            <button class="btn" id="btn-refresh-components" type="button">Refresh components</button>
-            <button class="btn" id="btn-clear-components" type="button">Clear filters</button>
-          </div>
-        </div>
-        <div class="status" id="component-browser-status" style="margin-top:12px;"></div>
-        <div id="component-browser-list" class="component-browser-list" style="margin-top:14px;"></div>
-        <label for="component-draft-output" style="margin-top:14px;">Combined component draft</label>
-        <textarea id="component-draft-output" placeholder="Selected components will be merged here..."></textarea>
-        <div class="row" style="margin-top:14px;">
-          <button class="btn" id="btn-build-component-draft" type="button">Build draft from selected</button>
-          <button class="btn" id="btn-send-component-draft" type="button">Send draft to Prompt Studio</button>
-          <button class="btn" id="btn-clear-component-selection" type="button">Clear selected</button>
-        </div>
-        <div class="divider"></div>
-        <div class="card-lite" style="margin-top:14px;">
-          <h2 style="margin-top:0;">Output Metadata Recovery moved to Neo Library</h2>
-          <p class="mini-note" style="margin:0;">Use <strong>Neo Library → Output Inspector</strong> for output metadata extraction, prompt rebuild, output comparison, and save-as prompt / character actions.</p>
-        </div>
+        </details>
 
         <div class="divider"></div>
-        <h2>Batch Captioning</h2>
-        <div class="grid grid-3">
-          <div>
-            <label for="batch-mode">Batch mode</label>
-            <select id="batch-mode">
-              <option value="dataset">Dataset Preparation</option>
-              <option value="library">Save to Library</option>
-            </select>
+        <details class="accordion-block" data-accordion-id="caption-prompt-components" data-default-open="false">
+          <summary class="accordion-summary">
+            <div>
+              <div class="accordion-title">Prompt Components</div>
+              <div class="accordion-hint">Reuse saved face, outfit, pose, location, and custom caption slices as modular prompt building blocks.</div>
+            </div>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body">
+            <div class="mini-note" style="margin-top:0;">Save targeted captions as face / outfit / pose / location components, then combine them into a new prompt draft.</div>
+            <div class="grid grid-4" style="margin-top:14px;">
+              <div>
+                <label for="component-browser-query">Search components</label>
+                <input id="component-browser-query" type="text" placeholder="Search saved components..." />
+              </div>
+              <div>
+                <label for="component-browser-category">Category</label>
+                <select id="component-browser-category"></select>
+              </div>
+              <div>
+                <label for="component-browser-type">Component type</label>
+                <select id="component-browser-type">
+                  <option value="">All component types</option>
+                  <option value="face">Face</option>
+                  <option value="person">Person / character</option>
+                  <option value="outfit">Outfit</option>
+                  <option value="pose">Pose</option>
+                  <option value="location">Location</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
+              <div style="display:flex; align-items:end; gap:12px;">
+                <button class="btn" id="btn-refresh-components" type="button">Refresh components</button>
+                <button class="btn" id="btn-clear-components" type="button">Clear filters</button>
+              </div>
+            </div>
+            <div class="status" id="component-browser-status" style="margin-top:12px;"></div>
+            <div id="component-browser-list" class="component-browser-list" style="margin-top:14px;"></div>
+            <label for="component-draft-output" style="margin-top:14px;">Combined component draft</label>
+            <textarea id="component-draft-output" placeholder="Selected components will be merged here..."></textarea>
+            <div class="row" style="margin-top:14px;">
+              <button class="btn" id="btn-build-component-draft" type="button">Build draft from selected</button>
+              <button class="btn" id="btn-send-component-draft" type="button">Send draft to Prompt Studio</button>
+              <button class="btn" id="btn-clear-component-selection" type="button">Clear selected</button>
+            </div>
           </div>
-          <div>
-            <label for="batch-folder">Input folder</label>
-            <input id="batch-folder" type="text" placeholder="D:\images\to-caption" />
+        </details>
+
+        <div class="divider"></div>
+        <details class="accordion-block" data-accordion-id="caption-batch-captioning" data-default-open="true">
+          <summary class="accordion-summary">
+            <div>
+              <div class="accordion-title">Batch Captioning</div>
+              <div class="accordion-hint">Run Dataset Preparation or Save to Library in bulk while keeping the main Caption Studio controls visible.</div>
+            </div>
+            <span class="accordion-chevron" aria-hidden="true">▾</span>
+          </summary>
+          <div class="accordion-body">
+            <div class="grid grid-4">
+              <div>
+                <label for="batch-mode">Workflow mode</label>
+                <select id="batch-mode">
+                  <option value="dataset">Dataset Preparation</option>
+                  <option value="library">Save to Library</option>
+                </select>
+              </div>
+              <div style="grid-column: span 2;">
+                <label for="batch-folder">Input folder</label>
+                <input id="batch-folder" type="text" placeholder="D:\images\to-caption" />
+              </div>
+              <div style="display:flex; align-items:end;">
+                <button class="btn" id="btn-batch-input-folder" type="button">Browse input folder</button>
+              </div>
+            </div>
+            <div id="batch-interrupted-banner" class="batch-interrupted-banner hidden" style="margin-top:16px;">
+              <div>
+                <div class="batch-interrupted-title">Interrupted batch detected</div>
+                <div class="batch-interrupted-copy">Resume from remaining files only, or load the old settings and start fresh.</div>
+                <div class="mini-note" id="batch-interrupted-summary"></div>
+              </div>
+              <div class="batch-interrupted-actions">
+                <button class="btn btn-primary" id="btn-interrupted-batch-resume" type="button">Resume</button>
+                <button class="btn" id="btn-interrupted-batch-start-fresh" type="button">Start fresh</button>
+                <button class="btn" id="btn-interrupted-batch-open-log" type="button">Open log</button>
+                <button class="btn" id="btn-interrupted-batch-cancel" type="button">Cancel</button>
+              </div>
+            </div>
+
+            <div class="grid grid-4" style="margin-top:14px;">
+              <div>
+                <label for="batch-extensions">Include extensions</label>
+                <input id="batch-extensions" type="text" placeholder="png, jpg, jpeg, webp" />
+              </div>
+              <div>
+                <label><input id="batch-recursive" type="checkbox" /> Search subfolders recursively</label>
+              </div>
+              <div>
+                <label for="batch-post-action">After batch completes</label>
+                <select id="batch-post-action">
+                  <option value="none">Do nothing</option>
+                  <option value="sleep">Sleep</option>
+                  <option value="hibernate">Hibernate</option>
+                  <option value="shutdown">Shut down</option>
+                </select>
+              </div>
+              <div class="help">Batch uses the current Caption Studio settings and preset. Cancel stops after the current file. Resume and retry use the saved batch session.</div>
+            </div>
+
+            <div id="batch-dataset-panel" class="batch-mode-group" style="margin-top:16px;">
+              <div class="batch-mode-heading">
+                <div>
+                  <div class="batch-mode-title">Dataset Preparation</div>
+                  <div class="batch-mode-hint">Caption images, rename them into a clean sequence, and write everything into a safe output folder without touching originals unless you explicitly choose move.</div>
+                </div>
+                <span class="badge">Output-first flow</span>
+              </div>
+              <div class="grid grid-4" style="margin-top:14px;" id="batch-dataset-output-row">
+                <div style="grid-column: span 3;">
+                  <label for="batch-output-folder">Output folder</label>
+                  <input id="batch-output-folder" type="text" placeholder="D:\datasets\character_set_01" />
+                </div>
+                <div style="display:flex; align-items:end;">
+                  <button class="btn" id="btn-batch-output-folder" type="button">Browse output folder</button>
+                </div>
+              </div>
+              <div class="grid grid-4 batch-checkbox-grid" style="margin-top:14px;" id="batch-dataset-options">
+                <label class="toggle-card"><input id="batch-dataset-caption-images" type="checkbox" checked /> Caption images</label>
+                <label class="toggle-card"><input id="batch-dataset-save-txt" type="checkbox" checked /> Save captions as .txt</label>
+                <label class="toggle-card"><input id="batch-dataset-rename-images" type="checkbox" checked /> Rename output images</label>
+                <label class="toggle-card"><input id="batch-skip-existing" type="checkbox" checked /> Skip already processed files</label>
+              </div>
+              <div class="grid grid-4 batch-checkbox-grid" style="margin-top:12px;">
+                <label class="toggle-card"><input id="batch-overwrite" type="checkbox" /> Overwrite existing output files</label>
+                <div>
+                  <label for="batch-dataset-transfer-mode">Image transfer</label>
+                  <select id="batch-dataset-transfer-mode">
+                    <option value="copy">Copy originals to output</option>
+                    <option value="move">Move originals to output</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="batch-dataset-log-format">Dataset log</label>
+                  <select id="batch-dataset-log-format">
+                    <option value="csv" selected>CSV log</option>
+                    <option value="json">JSON log</option>
+                    <option value="none">No log file</option>
+                  </select>
+                </div>
+                <div class="help">Originals stay untouched unless you explicitly choose move. Output writes renamed images and optional .txt sidecars into the selected folder.</div>
+              </div>
+              <div class="grid grid-4 batch-rename-grid" style="margin-top:14px;">
+                <div>
+                  <label for="batch-dataset-prefix">Prefix</label>
+                  <input id="batch-dataset-prefix" type="text" value="character" />
+                </div>
+                <div>
+                  <label for="batch-dataset-pattern">Naming pattern</label>
+                  <input id="batch-dataset-pattern" type="text" value="{prefix}_{num}" />
+                </div>
+                <div>
+                  <label for="batch-number-start">Start number</label>
+                  <input id="batch-number-start" type="number" value="1" />
+                </div>
+                <div>
+                  <label for="batch-dataset-number-padding">Number padding</label>
+                  <input id="batch-dataset-number-padding" type="number" value="4" min="1" max="8" />
+                </div>
+              </div>
+              <div class="mini-note batch-example-note" id="batch-dataset-example-note" style="margin-top:10px;">Example output: character_0001.png + character_0001.txt</div>
+            </div>
+
+            <div id="batch-library-panel" class="batch-mode-group hidden" style="margin-top:16px;">
+              <div class="batch-mode-heading">
+                <div>
+                  <div class="batch-mode-title">Save to Library</div>
+                  <div class="batch-mode-hint">Use the current caption settings to generate entries directly into Neo Library Data.</div>
+                </div>
+                <span class="badge">Library mode</span>
+              </div>
+              <div class="grid grid-4" style="margin-top:14px;">
+                <div>
+                  <label for="batch-category">Library category</label>
+                  <select id="batch-category"></select>
+                </div>
+                <div>
+                  <label for="batch-category-new">New library category</label>
+                  <input id="batch-category-new" type="text" placeholder="New category" />
+                </div>
+                <div>
+                  <label for="batch-base-name">Base name</label>
+                  <input id="batch-base-name" type="text" value="Batch_Caption" />
+                </div>
+                <div>
+                  <label for="batch-library-number-start">Starting number</label>
+                  <input id="batch-library-number-start" type="number" value="1" />
+                </div>
+              </div>
+              <div class="grid grid-4" style="margin-top:14px;">
+                <div id="batch-library-options">
+                  <label><input id="batch-skip-duplicates" type="checkbox" checked /> Skip duplicates by image hash</label>
+                </div>
+                <div class="help" style="grid-column: span 3;">Dataset export controls stay hidden here on purpose. This mode only saves caption records into Neo Library.</div>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top:14px; flex-wrap:wrap; gap:10px;">
+              <button class="btn" id="btn-batch-preview" type="button">Preview files</button>
+              <button class="btn btn-primary" id="btn-run-batch" type="button">Run batch</button>
+              <button class="btn" id="btn-batch-cancel" type="button" disabled>Cancel batch</button>
+              <button class="btn" id="btn-batch-resume" type="button">Resume batch</button>
+              <button class="btn" id="btn-batch-retry" type="button">Retry failed</button>
+              <button class="btn" id="btn-batch-export-log" type="button">Export log</button>
+              <button class="btn" id="btn-batch-cancel-post-action" type="button" disabled>Cancel shutdown</button>
+              <span class="status" id="batch-status"></span>
+            </div>
+            <div class="card-lite" style="margin-top:14px;">
+              <div class="progress-shell"><div class="progress-fill" id="batch-progress-fill"></div></div>
+              <div class="timer-row">
+                <span class="timer-pill" id="batch-progress-text">Processing 0 / 0</span>
+                <span class="timer-pill" id="batch-elapsed-total">Batch total: 00:00</span>
+                <span class="timer-pill" id="batch-elapsed-current">Current file: 00:00</span>
+                <span class="timer-pill" id="batch-eta">ETA: —</span>
+              </div>
+              <div class="grid grid-2" style="margin-top:10px;">
+                <div class="mini-note" id="batch-current-file">Current file: —</div>
+                <div class="mini-note" id="batch-counts">Success: 0 · Failed: 0 · Skipped: 0</div>
+              </div>
+              <div class="grid grid-2" style="margin-top:10px;">
+                <div class="mini-note" id="batch-duplicate-summary">Duplicates: 0</div>
+                <div class="mini-note" id="batch-post-action-status">Post-task action: none</div>
+              </div>
+              <div class="grid grid-2" style="margin-top:10px;">
+                <div class="mini-note" id="batch-output-summary">Output folder: —</div>
+                <div class="mini-note" id="batch-logfile-summary">Dataset log: —</div>
+              </div>
+            </div>
+            <div class="grid grid-2" style="margin-top:10px;">
+              <div>
+                <label for="batch-session-select">Saved batch sessions</label>
+                <select id="batch-session-select"><option value="">—</option></select>
+              </div>
+              <div class="help">Resume uses the selected saved session. Retry failed only reruns images that previously errored.</div>
+            </div>
+            <textarea id="batch-log" class="log" placeholder="Batch preview / run log..."></textarea>
           </div>
-          <div>
-            <label for="batch-extensions">Include extensions</label>
-            <input id="batch-extensions" type="text" placeholder="png, jpg, jpeg, webp" />
-          </div>
-        </div>
-        <div class="grid grid-3" style="margin-top:14px;">
-          <div>
-            <label><input id="batch-recursive" type="checkbox" /> Search subfolders recursively</label>
-          </div>
-          <div id="batch-dataset-options">
-            <label><input id="batch-skip-existing" type="checkbox" checked /> Skip existing .txt files</label>
-            <label><input id="batch-overwrite" type="checkbox" /> Overwrite existing .txt files</label>
-          </div>
-          <div id="batch-library-options" class="hidden">
-            <label><input id="batch-skip-duplicates" type="checkbox" checked /> Skip duplicates by image hash</label>
-          </div>
-        </div>
-        <div class="grid grid-3" style="margin-top:14px;" id="batch-dataset-output-row">
-          <div style="grid-column: span 2;">
-            <label for="batch-output-folder">Dataset output folder (optional)</label>
-            <input id="batch-output-folder" type="text" placeholder="Leave empty to save .txt next to each image" />
-          </div>
-          <div style="display:flex; align-items:end;">
-            <button class="btn" id="btn-batch-output-folder" type="button">Browse output folder</button>
-          </div>
-        </div>
-        <div class="grid grid-3" style="margin-top:14px;">
-          <div>
-            <label for="batch-category">Library category</label>
-            <select id="batch-category"></select>
-          </div>
-          <div>
-            <label for="batch-category-new">New library category</label>
-            <input id="batch-category-new" type="text" placeholder="New category" />
-          </div>
-          <div>
-            <label for="batch-base-name">Base name</label>
-            <input id="batch-base-name" type="text" value="Batch_Caption" />
-          </div>
-        </div>
-        <div class="grid grid-3" style="margin-top:14px;">
-          <div>
-            <label for="batch-number-start">Starting number</label>
-            <input id="batch-number-start" type="number" value="1" />
-          </div>
-          <div>
-            <label for="batch-post-action">After batch completes</label>
-            <select id="batch-post-action">
-              <option value="none">Do nothing</option>
-              <option value="sleep">Sleep</option>
-              <option value="hibernate">Hibernate</option>
-              <option value="shutdown">Shut down</option>
-            </select>
-          </div>
-          <div class="help">Batch uses the current Caption Studio settings and preset. Cancel stops after the current file. Resume and retry use the saved batch session.</div>
-        </div>
-        <div class="row" style="margin-top:14px; flex-wrap:wrap; gap:10px;">
-          <button class="btn" id="btn-batch-preview" type="button">Preview files</button>
-          <button class="btn btn-primary" id="btn-run-batch" type="button">Run batch</button>
-          <button class="btn" id="btn-batch-cancel" type="button" disabled>Cancel batch</button>
-          <button class="btn" id="btn-batch-resume" type="button">Resume batch</button>
-          <button class="btn" id="btn-batch-retry" type="button">Retry failed</button>
-          <button class="btn" id="btn-batch-export-log" type="button">Export log</button>
-          <button class="btn" id="btn-batch-cancel-post-action" type="button" disabled>Cancel shutdown</button>
-          <span class="status" id="batch-status"></span>
-        </div>
-        <div class="card-lite" style="margin-top:14px;">
-          <div class="progress-shell"><div class="progress-fill" id="batch-progress-fill"></div></div>
-          <div class="timer-row">
-            <span class="timer-pill" id="batch-progress-text">Processing 0 / 0</span>
-            <span class="timer-pill" id="batch-elapsed-total">Batch total: 00:00</span>
-            <span class="timer-pill" id="batch-elapsed-current">Current file: 00:00</span>
-            <span class="timer-pill" id="batch-eta">ETA: —</span>
-          </div>
-          <div class="grid grid-2" style="margin-top:10px;">
-            <div class="mini-note" id="batch-current-file">Current file: —</div>
-            <div class="mini-note" id="batch-counts">Success: 0 · Failed: 0 · Skipped: 0</div>
-          </div>
-          <div class="grid grid-2" style="margin-top:10px;">
-            <div class="mini-note" id="batch-duplicate-summary">Duplicates: 0</div>
-            <div class="mini-note" id="batch-post-action-status">Post-task action: none</div>
-          </div>
-        </div>
-        <div class="grid grid-2" style="margin-top:10px;">
-          <div>
-            <label for="batch-session-select">Saved batch sessions</label>
-            <select id="batch-session-select"><option value="">—</option></select>
-          </div>
-          <div class="help">Resume uses the selected saved session. Retry failed only reruns images that previously errored.</div>
-        </div>
-        <textarea id="batch-log" class="log" placeholder="Batch preview / run log..."></textarea>
+        </details>
       </div>
     </section>
 
@@ -952,14 +1145,14 @@
     <script>
     window.NEO_STUDIO_BOOT = {{ boot_data | tojson }};
   </script>
-  <script src="{{ url_for('static', path='js/common.js') }}" defer></script>
-  <script src="{{ url_for('static', path='js/search.js') }}" defer></script>
-  <script src="{{ url_for('static', path='js/characters.js') }}" defer></script>
-  <script src="{{ url_for('static', path='js/batch_helpers.js') }}" defer></script>
-  <script src="{{ url_for('static', path='js/prompts.js') }}" defer></script>
-  <script src="{{ url_for('static', path='js/captions.js') }}" defer></script>
-  <script src="{{ url_for('static', path='js/workspace.js') }}" defer></script>
-  <script src="{{ url_for('static', path='js/app.js') }}" defer></script>
+  <script src="{{ url_for('static', path='js/common.js') }}?v=phase3a-20260328-1" defer></script>
+  <script src="{{ url_for('static', path='js/search.js') }}?v=phase3a-20260328-1" defer></script>
+  <script src="{{ url_for('static', path='js/characters.js') }}?v=phase3a-20260328-1" defer></script>
+  <script src="{{ url_for('static', path='js/batch_helpers.js') }}?v=phase3a-20260328-1" defer></script>
+  <script src="{{ url_for('static', path='js/prompts.js') }}?v=phase3a-20260328-1" defer></script>
+  <script src="{{ url_for('static', path='js/captions.js') }}?v=phase3a-20260328-1" defer></script>
+  <script src="{{ url_for('static', path='js/workspace.js') }}?v=phase3a-20260328-1" defer></script>
+  <script src="{{ url_for('static', path='js/app.js') }}?v=phase3a-20260328-1" defer></script>
 
 </body>
 </html>

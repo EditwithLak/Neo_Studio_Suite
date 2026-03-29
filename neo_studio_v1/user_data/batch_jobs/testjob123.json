@@ -1,0 +1,154 @@
+{
+  "job_id": "testjob123",
+  "status": "completed",
+  "message": "Batch finished. Processed: 3, saved: 3, skipped: 0, errors: 0.",
+  "mode": "dataset",
+  "total_items": 3,
+  "current_index": 3,
+  "current_item_name": "",
+  "current_item_path": "",
+  "current_item_started_at": 0.0,
+  "last_item_elapsed_seconds": 0.002384662628173828,
+  "processed": 0,
+  "saved": 0,
+  "skipped": 0,
+  "errors": 0,
+  "duplicates": 0,
+  "detail_lines": [
+    "Prepared dataset pair: IMG_1.png -> character_0001.png + character_0001.txt",
+    "Prepared dataset pair: IMG_2.png -> character_0002.png + character_0002.txt",
+    "Prepared dataset pair: IMG_3.png -> character_0003.png + character_0003.txt",
+    "Dataset log written: /tmp/neo_phase2_test_1t52plzy/output/dataset_prepare_log.csv"
+  ],
+  "error_lines": [],
+  "duplicate_lines": [],
+  "failed_items": [],
+  "remaining_items": [
+    "/tmp/neo_phase2_test_1t52plzy/input/IMG_1.png",
+    "/tmp/neo_phase2_test_1t52plzy/input/IMG_2.png",
+    "/tmp/neo_phase2_test_1t52plzy/input/IMG_3.png"
+  ],
+  "started_at": 1774701605.3601196,
+  "finished_at": 1774701605.3712265,
+  "stats": {
+    "root": "/mnt/data/neo_phase2/neo_library_data",
+    "prompt_count": 0,
+    "caption_count": 1,
+    "categories": [
+      "people",
+      "uncategorized"
+    ],
+    "last_prompt_category": "uncategorized",
+    "last_caption_category": "people",
+    "last_caption_preset": "Tags",
+    "last_prompt_preset": "Descriptive"
+  },
+  "categories": [
+    "people",
+    "uncategorized"
+  ],
+  "cancel_requested": false,
+  "post_action": "none",
+  "post_action_status": "idle",
+  "post_action_execute_at": 0.0,
+  "dataset_log_path": "/tmp/neo_phase2_test_1t52plzy/output/dataset_prepare_log.csv",
+  "params": {
+    "model": "default",
+    "mode": "dataset",
+    "folder_path": "/tmp/neo_phase2_test_1t52plzy/input",
+    "category": "uncategorized",
+    "base_name": "Batch_Caption",
+    "numbering_start": 1,
+    "overwrite_existing": false,
+    "skip_existing_txt": true,
+    "skip_duplicates": true,
+    "recursive": false,
+    "include_exts": [
+      ".png"
+    ],
+    "prompt_style": "Stable Diffusion Prompt",
+    "caption_length": "any",
+    "custom_prompt": "",
+    "max_new_tokens": 160,
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "top_k": 40,
+    "prefix": "",
+    "suffix": "",
+    "output_style": "Auto (match input)",
+    "output_folder": "/tmp/neo_phase2_test_1t52plzy/output",
+    "component_type": "",
+    "caption_mode": "full_image",
+    "detail_level": "detailed",
+    "post_task_action": "none",
+    "dataset_caption_images": true,
+    "dataset_save_txt": true,
+    "dataset_rename_images": true,
+    "dataset_transfer_mode": "copy",
+    "dataset_skip_processed": true,
+    "dataset_name_prefix": "character",
+    "dataset_name_pattern": "{prefix}_{num}",
+    "dataset_number_padding": 4,
+    "dataset_log_format": "csv",
+    "settings": {
+      "max_tokens": 160,
+      "temperature": 0.2,
+      "top_p": 0.9,
+      "top_k": 40,
+      "caption_mode": "full_image",
+      "component_type": "",
+      "detail_level": "detailed"
+    },
+    "target_images": [
+      "/tmp/neo_phase2_test_1t52plzy/input/IMG_1.png",
+      "/tmp/neo_phase2_test_1t52plzy/input/IMG_2.png",
+      "/tmp/neo_phase2_test_1t52plzy/input/IMG_3.png"
+    ],
+    "dataset_sequence_map": {
+      "/tmp/neo_phase2_test_1t52plzy/input/IMG_1.png": 1,
+      "/tmp/neo_phase2_test_1t52plzy/input/IMG_2.png": 2,
+      "/tmp/neo_phase2_test_1t52plzy/input/IMG_3.png": 3
+    }
+  },
+  "file_statuses": {
+    "/tmp/neo_phase2_test_1t52plzy/input/IMG_1.png": {
+      "path": "/tmp/neo_phase2_test_1t52plzy/input/IMG_1.png",
+      "name": "IMG_1.png",
+      "status": "pending",
+      "started_at": 0.0,
+      "finished_at": 0.0,
+      "message": "",
+      "error_message": "",
+      "output_image_path": "",
+      "output_caption_path": "",
+      "action": ""
+    },
+    "/tmp/neo_phase2_test_1t52plzy/input/IMG_2.png": {
+      "path": "/tmp/neo_phase2_test_1t52plzy/input/IMG_2.png",
+      "name": "IMG_2.png",
+      "status": "pending",
+      "started_at": 0.0,
+      "finished_at": 0.0,
+      "message": "",
+      "error_message": "",
+      "output_image_path": "",
+      "output_caption_path": "",
+      "action": ""
+    },
+    "/tmp/neo_phase2_test_1t52plzy/input/IMG_3.png": {
+      "path": "/tmp/neo_phase2_test_1t52plzy/input/IMG_3.png",
+      "name": "IMG_3.png",
+      "status": "pending",
+      "started_at": 0.0,
+      "finished_at": 0.0,
+      "message": "",
+      "error_message": "",
+      "output_image_path": "",
+      "output_caption_path": "",
+      "action": ""
+    }
+  },
+  "completed_files": 0,
+  "failed_files": 0,
+  "skipped_files": 0
+}

@@ -3,6 +3,9 @@ let captionCropDrag = null;
 let captionImageObjectUrl = '';
 let captionSelectedComponentIds = new Set();
 let captionAutoComponentValue = '';
+let captionBrowserEntries = [];
+let captionBrowserPage = 1;
+let captionBrowserRefreshHandle = null;
 
 function componentTypeForMode(mode) {
   return {
@@ -223,9 +226,65 @@ function captionBrowserParams() {
   if (componentType) params.set('component_type', componentType);
   if (dateFrom) params.set('date_from', dateFrom);
   if (dateTo) params.set('date_to', dateTo);
-  params.set('limit', '120');
+  params.set('sort', captionBrowserSortMode());
+  params.set('page', String(Math.max(1, Number(captionBrowserPage) || 1)));
+  params.set('page_size', String(captionBrowserPerPage()));
   return params;
 }
+
+function captionBrowserPerPage() {
+  const value = Number($('caption-browser-page-size')?.value || 20);
+  return [10, 20, 50].includes(value) ? value : 20;
+}
+
+function captionBrowserSortMode() {
+  return $('caption-browser-sort')?.value || 'newest';
+}
+
+function captionBrowserTimestamp(entry) {
+  return String(entry?.updated_at || entry?.created_at || '');
+}
+
+function renderCaptionBrowserPagination(totalCount, shownCount, totalPages) {
+  const indicator = $('caption-browser-page-indicator');
+  const summary = $('caption-browser-result-summary');
+  const prev = $('btn-caption-browser-prev');
+  const next = $('btn-caption-browser-next');
+  const safePage = totalCount ? Math.min(Math.max(1, captionBrowserPage), totalPages) : 1;
+  if (indicator) indicator.textContent = `Page ${safePage} of ${totalPages}`;
+  if (summary) {
+    if (!totalCount) {
+      summary.textContent = 'Showing 0-0 of 0';
+    } else {
+      const start = ((safePage - 1) * captionBrowserPerPage()) + 1;
+      const end = start + shownCount - 1;
+      summary.textContent = `Showing ${start}-${end} of ${totalCount}`;
+    }
+  }
+  if (prev) prev.disabled = safePage <= 1 || !totalCount;
+  if (next) next.disabled = safePage >= totalPages || !totalCount;
+}
+
+function setCaptionBrowserPage(page) {
+  captionBrowserPage = Math.max(1, Number(page) || 1);
+  refreshCaptionBrowser();
+}
+
+function changeCaptionBrowserPage(delta) {
+  setCaptionBrowserPage(captionBrowserPage + (Number(delta) || 0));
+}
+
+function resetCaptionBrowserControls() {
+  if ($('caption-browser-sort')) $('caption-browser-sort').value = 'newest';
+  if ($('caption-browser-page-size')) $('caption-browser-page-size').value = '20';
+  captionBrowserPage = 1;
+}
+
+function scheduleCaptionBrowserRefresh(resetPage=true) {
+  window.clearTimeout(captionBrowserRefreshHandle);
+  captionBrowserRefreshHandle = window.setTimeout(() => refreshCaptionBrowser({ resetPage }), 220);
+}
+
 
 function captionPresetRecentNames(limit=8) {
   return Object.entries(captionPresets || {})
@@ -321,12 +380,18 @@ function renderCaptionBrowser(entries) {
   });
 }
 
-async function refreshCaptionBrowser() {
+async function refreshCaptionBrowser(options={}) {
+  const { resetPage=false } = options || {};
+  if (resetPage) captionBrowserPage = 1;
   try {
+    setStatus('caption-browser-status', 'Loading saved captions...');
     const data = await safeFetchJson(`/api/caption-records?${captionBrowserParams().toString()}`);
     refreshCategoryList(data.categories || initialCategories);
-    renderCaptionBrowser(data.entries || []);
-    setStatus('caption-browser-status', `${(data.entries || []).length} saved caption(s) found.`);
+    captionBrowserEntries = data.entries || [];
+    captionBrowserPage = Math.max(1, Number(data.page) || captionBrowserPage || 1);
+    renderCaptionBrowser(captionBrowserEntries);
+    renderCaptionBrowserPagination(Number(data.total || 0), captionBrowserEntries.length, Math.max(1, Number(data.total_pages) || 1));
+    setStatus('caption-browser-status', Number(data.total || 0) ? `${data.total} saved caption(s) found.` : 'No saved captions match the current filters.');
     if (typeof refreshRecentItems === 'function') refreshRecentItems();
   } catch (e) {
     setStatus('caption-browser-status', e.message, 'error');

@@ -1,4 +1,5 @@
 const boot = window.NEO_STUDIO_BOOT || {};
+window.NEO_STUDIO_BASE_TITLE = document.title || 'Neo Studio';
 
 const initialCategories = boot.initialCategories || [];
 const initialPromptPresets = boot.initialPromptPresets || {};

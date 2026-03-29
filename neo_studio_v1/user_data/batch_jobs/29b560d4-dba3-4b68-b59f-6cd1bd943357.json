@@ -14,7 +14,7 @@
   "processed": 0,
   "saved": 0,
   "skipped": 0,
-  "errors": 1,
+  "errors": 0,
   "duplicates": 0,
   "detail_lines": [
     "Error: a.png -> Vision error: All connection attempts failed"
@@ -86,5 +86,9 @@
       "component_type": "face",
       "detail_level": "attribute_rich"
     }
-  }
+  },
+  "file_statuses": {},
+  "completed_files": 0,
+  "failed_files": 0,
+  "skipped_files": 0
 }

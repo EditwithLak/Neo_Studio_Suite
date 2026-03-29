@@ -20,12 +20,13 @@ async function previewBatch() {
 
 function buildBatchFormData() {
   const fd = new FormData();
+  const batchMode = $('batch-mode').value;
   fd.append('model', currentModel());
-  fd.append('mode', $('batch-mode').value);
+  fd.append('mode', batchMode);
   fd.append('folder_path', $('batch-folder').value || '');
   fd.append('category', resolveCategory('batch-category', 'batch-category-new'));
   fd.append('base_name', $('batch-base-name').value || 'Batch_Caption');
-  fd.append('numbering_start', $('batch-number-start').value || '1');
+  fd.append('numbering_start', (batchMode === 'library' ? $('batch-library-number-start')?.value : $('batch-number-start')?.value) || '1');
   fd.append('overwrite_existing', $('batch-overwrite').checked ? 'true' : 'false');
   fd.append('skip_existing_txt', $('batch-skip-existing').checked ? 'true' : 'false');
   fd.append('skip_duplicates', $('batch-skip-duplicates').checked ? 'true' : 'false');
@@ -46,6 +47,15 @@ function buildBatchFormData() {
   fd.append('caption_mode', $('caption-mode')?.value || 'full_image');
   fd.append('detail_level', $('caption-detail-level')?.value || 'detailed');
   fd.append('post_task_action', $('batch-post-action').value || 'none');
+  fd.append('dataset_caption_images', $('batch-dataset-caption-images')?.checked ? 'true' : 'false');
+  fd.append('dataset_save_txt', $('batch-dataset-save-txt')?.checked ? 'true' : 'false');
+  fd.append('dataset_rename_images', $('batch-dataset-rename-images')?.checked ? 'true' : 'false');
+  fd.append('dataset_transfer_mode', $('batch-dataset-transfer-mode')?.value || 'copy');
+  fd.append('dataset_skip_processed', $('batch-skip-existing')?.checked ? 'true' : 'false');
+  fd.append('dataset_name_prefix', $('batch-dataset-prefix')?.value || 'character');
+  fd.append('dataset_name_pattern', $('batch-dataset-pattern')?.value || '{prefix}_{num}');
+  fd.append('dataset_number_padding', $('batch-dataset-number-padding')?.value || '4');
+  fd.append('dataset_log_format', $('batch-dataset-log-format')?.value || 'csv');
   return fd;
 }
 
@@ -53,6 +63,11 @@ async function runBatchCaption() {
   const mode = $('caption-mode')?.value || 'full_image';
   if (mode === 'custom_crop') {
     setStatus('batch-status', 'Batch captioning does not support Custom crop mode. Switch Caption mode to Full image, Face only, Person / character, Outfit, Pose, or Location.', 'warn');
+    return;
+  }
+  const batchMode = $('batch-mode')?.value || 'dataset';
+  if (batchMode === 'dataset' && !trim($('batch-output-folder')?.value || '')) {
+    setStatus('batch-status', 'Dataset Preparation needs an output folder.', 'warn');
     return;
   }
   const fd = buildBatchFormData();
@@ -226,11 +241,61 @@ function switchTab(tab) {
   document.querySelectorAll('.section').forEach(sec => sec.classList.toggle('active', sec.id === `tab-${tab}`));
 }
 
+function initializeStudioAccordions() {
+  document.querySelectorAll('.accordion-block[data-accordion-id]').forEach(block => {
+    const accordionId = block.dataset.accordionId;
+    if (!accordionId) return;
+    const storageKey = `neo-studio-accordion:${accordionId}`;
+    const saved = window.sessionStorage.getItem(storageKey);
+    const defaultOpen = String(block.dataset.defaultOpen || '').toLowerCase() === 'true';
+    block.open = saved === null ? defaultOpen : saved === 'true';
+    block.addEventListener('toggle', () => {
+      window.sessionStorage.setItem(storageKey, block.open ? 'true' : 'false');
+    });
+  });
+}
+
+function datasetExampleBaseName() {
+  const renameEnabled = !!$('batch-dataset-rename-images')?.checked;
+  if (!renameEnabled) return 'original_filename';
+  const prefix = trim($('batch-dataset-prefix')?.value || 'character') || 'character';
+  const pattern = trim($('batch-dataset-pattern')?.value || '{prefix}_{num}') || '{prefix}_{num}';
+  const start = Math.max(1, Number($('batch-number-start')?.value || 1));
+  const padding = Math.max(1, Number($('batch-dataset-number-padding')?.value || 4));
+  const num = String(start).padStart(padding, '0');
+  return pattern
+    .replaceAll('{prefix}', prefix)
+    .replaceAll('{num}', num)
+    .replaceAll('{n}', num)
+    .replaceAll('{index}', String(start));
+}
+
+function updateDatasetPreparationPreview() {
+  const note = $('batch-dataset-example-note');
+  if (!note) return;
+  const base = datasetExampleBaseName();
+  const saveTxt = !!$('batch-dataset-save-txt')?.checked && !!$('batch-dataset-caption-images')?.checked;
+  note.textContent = saveTxt ? `Example output: ${base}.png + ${base}.txt` : `Example output: ${base}.png`;
+}
+
+function syncDatasetPreparationControls() {
+  const captionEnabled = !!$('batch-dataset-caption-images')?.checked;
+  if ($('batch-dataset-save-txt')) {
+    $('batch-dataset-save-txt').disabled = !captionEnabled;
+    if (!captionEnabled) $('batch-dataset-save-txt').checked = false;
+  }
+  const renameEnabled = !!$('batch-dataset-rename-images')?.checked;
+  ['batch-dataset-prefix', 'batch-dataset-pattern', 'batch-number-start', 'batch-dataset-number-padding'].forEach(id => {
+    if ($(id)) $(id).disabled = !renameEnabled;
+  });
+  updateDatasetPreparationPreview();
+}
+
 function toggleBatchMode() {
   const mode = $('batch-mode').value;
-  $('batch-dataset-options').classList.toggle('hidden', mode !== 'dataset');
-  $('batch-library-options').classList.toggle('hidden', mode !== 'library');
-  $('batch-dataset-output-row').classList.toggle('hidden', mode !== 'dataset');
+  $('batch-dataset-panel').classList.toggle('hidden', mode !== 'dataset');
+  $('batch-library-panel').classList.toggle('hidden', mode !== 'library');
+  syncDatasetPreparationControls();
 }
 
 function copyText(id, statusId) {

@@ -293,27 +293,47 @@ async def api_caption_records(
     component_type: str = '',
     detail_level: str = '',
     component_only: bool = False,
+    sort: str = 'newest',
+    page: int = 1,
+    page_size: int = 0,
 ):
+    effective_page_size = max(1, int(page_size or limit or 200))
+    page_items, total = caption_entries(
+        query=query,
+        category=category,
+        model=model,
+        prompt_style=prompt_style,
+        date_from=date_from,
+        date_to=date_to,
+        limit=limit,
+        component_type=component_type,
+        detail_level=detail_level,
+        component_only=component_only,
+        sort=sort,
+        page=page,
+        page_size=effective_page_size,
+        return_total=True,
+    )
     entries = [
         {
             **entry,
             'thumb_url': f"/api/caption-thumb?caption_id={entry.get('id')}",
             'image_url': f"/api/caption-image-file?caption_id={entry.get('id')}",
         }
-        for entry in caption_entries(
-            query=query,
-            category=category,
-            model=model,
-            prompt_style=prompt_style,
-            date_from=date_from,
-            date_to=date_to,
-            limit=limit,
-            component_type=component_type,
-            detail_level=detail_level,
-            component_only=component_only,
-        )
+        for entry in page_items
     ]
-    return JSONResponse({'ok': True, 'entries': entries, 'categories': list_categories()})
+    total_pages = max(1, (total + effective_page_size - 1) // effective_page_size)
+    current_page = min(max(1, int(page or 1)), total_pages)
+    return JSONResponse({
+        'ok': True,
+        'entries': entries,
+        'categories': list_categories(),
+        'total': total,
+        'page': current_page,
+        'page_size': effective_page_size,
+        'total_pages': total_pages,
+        'sort': (sort or 'newest').strip().lower() or 'newest',
+    })
 
 
 @router.get('/api/caption-record')

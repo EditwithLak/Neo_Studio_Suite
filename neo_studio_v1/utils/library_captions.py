@@ -232,13 +232,22 @@ def caption_entries(
     component_type: str = '',
     detail_level: str = '',
     component_only: bool = False,
-) -> List[Dict[str, Any]]:
+    sort: str = 'newest',
+    page: int = 1,
+    page_size: int | None = None,
+    return_total: bool = False,
+) -> List[Dict[str, Any]] | tuple[List[Dict[str, Any]], int]:
     query_lc = (query or '').strip().lower()
     category = (category or '').strip()
     model_lc = (model or '').strip().lower()
     style_lc = (prompt_style or '').strip().lower()
     component_type = _normalize_component_type(component_type)
     detail_level = _normalize_detail_level(detail_level) if detail_level else ''
+    sort_mode = (sort or 'newest').strip().lower()
+    if sort_mode not in {'newest', 'oldest', 'az'}:
+        sort_mode = 'newest'
+    current_page = max(1, int(page or 1))
+    effective_page_size = max(1, int(page_size or limit or 200))
     results: List[Dict[str, Any]] = []
     for rec in sorted(iter_records('caption'), key=record_sort_key, reverse=True):
         rec_category = str(rec.get('category') or 'uncategorized').strip() or 'uncategorized'
@@ -291,11 +300,35 @@ def caption_entries(
             'component_type': rec_component,
             'caption_mode': rec_mode,
             'detail_level': rec_detail,
-            'crop_meta': _normalize_crop_meta(rec.get('crop_meta')), 
+            'crop_meta': _normalize_crop_meta(rec.get('crop_meta')),
         })
-        if len(results) >= max(1, int(limit or 200)):
-            break
-    return results
+
+    if sort_mode == 'az':
+        results.sort(key=lambda item: (
+            str(item.get('name') or '').lower(),
+            str(item.get('updated_at') or item.get('created_at') or ''),
+        ))
+    else:
+        results.sort(
+            key=lambda item: (
+                str(item.get('updated_at') or item.get('created_at') or ''),
+                str(item.get('name') or '').lower(),
+            ),
+            reverse=(sort_mode == 'newest'),
+        )
+
+    total = len(results)
+    if page_size is not None:
+        total_pages = max(1, (total + effective_page_size - 1) // effective_page_size)
+        current_page = min(max(1, current_page), total_pages)
+        start = (current_page - 1) * effective_page_size
+        paged = results[start:start + effective_page_size]
+    else:
+        paged = results[:max(1, int(limit or 200))]
+
+    if return_total:
+        return paged, total
+    return paged
 
 
 def get_caption_record(caption_id: str = '', name: str = '', category: str = '') -> Dict[str, Any] | None:

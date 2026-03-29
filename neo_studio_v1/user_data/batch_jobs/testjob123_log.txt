@@ -1,0 +1,14 @@
+Neo Studio Batch Run Log
+==============================
+Job ID: testjob123
+Status: completed
+Mode: dataset
+Folder: /tmp/neo_phase2_test_1t52plzy/input
+Summary: Processed: 3, saved: 3, skipped: 0, errors: 0.
+
+Details
+------------------
+Prepared dataset pair: IMG_1.png -> character_0001.png + character_0001.txt
+Prepared dataset pair: IMG_2.png -> character_0002.png + character_0002.txt
+Prepared dataset pair: IMG_3.png -> character_0003.png + character_0003.txt
+Dataset log written: /tmp/neo_phase2_test_1t52plzy/output/dataset_prepare_log.csv

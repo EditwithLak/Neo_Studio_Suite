@@ -11,8 +11,8 @@
   "current_item_path": "",
   "current_item_started_at": 0.0,
   "last_item_elapsed_seconds": 0.1203761100769043,
-  "processed": 1,
-  "saved": 1,
+  "processed": 0,
+  "saved": 0,
   "skipped": 0,
   "errors": 0,
   "duplicates": 0,
@@ -76,5 +76,9 @@
       "top_p": 0.9,
       "top_k": 40
     }
-  }
+  },
+  "file_statuses": {},
+  "completed_files": 0,
+  "failed_files": 0,
+  "skipped_files": 0
 }

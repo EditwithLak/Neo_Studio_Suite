@@ -71,6 +71,15 @@ async def api_caption_batch_start(
     caption_mode: str = Form('full_image'),
     detail_level: str = Form('detailed'),
     post_task_action: str = Form('none'),
+    dataset_caption_images: str = Form('true'),
+    dataset_save_txt: str = Form('true'),
+    dataset_rename_images: str = Form('true'),
+    dataset_transfer_mode: str = Form('copy'),
+    dataset_skip_processed: str = Form('true'),
+    dataset_name_prefix: str = Form('character'),
+    dataset_name_pattern: str = Form('{prefix}_{num}'),
+    dataset_number_padding: int = Form(4),
+    dataset_log_format: str = Form('csv'),
 ):
     try:
         images = image_files_in_folder(folder_path, recursive=parse_bool(recursive), include_exts=parse_exts(include_exts))
@@ -79,6 +88,8 @@ async def api_caption_batch_start(
         return json_error(str(e), 400)
     if not images:
         return json_error('No supported image files found in that folder.', 400)
+    if (mode or 'dataset').strip().lower() == 'dataset' and not str(output_folder or '').strip():
+        return json_error('Dataset Preparation needs an output folder.', 400)
     if (caption_mode or '').strip().lower().replace(' ', '_') == 'custom_crop':
         return json_error('Batch captioning does not support Custom crop mode. Use Full image, Face only, Person / character, Outfit, Pose, or Location for batch runs.', 400)
 
@@ -109,9 +120,20 @@ async def api_caption_batch_start(
         caption_mode=caption_mode,
         detail_level=detail_level,
         post_task_action=post_task_action,
+        dataset_caption_images=dataset_caption_images,
+        dataset_save_txt=dataset_save_txt,
+        dataset_rename_images=dataset_rename_images,
+        dataset_transfer_mode=dataset_transfer_mode,
+        dataset_skip_processed=dataset_skip_processed,
+        dataset_name_prefix=dataset_name_prefix,
+        dataset_name_pattern=dataset_name_pattern,
+        dataset_number_padding=dataset_number_padding,
+        dataset_log_format=dataset_log_format,
         clamp_int=clamp_int,
         clamp_float=clamp_float,
     )
+    if params['mode'] == 'dataset' and params.get('dataset_rename_images'):
+        params['dataset_sequence_map'] = {str(img): params['numbering_start'] + idx for idx, img in enumerate(images)}
     return JSONResponse(create_batch_job(params, len(images)))
 
 

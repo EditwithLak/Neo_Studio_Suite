@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshPromptPresetAux($('prompt-preset').value);
   refreshCaptionPresetAux($('caption-preset').value);
   toggleBatchMode();
+  if (typeof syncDatasetPreparationControls === 'function') syncDatasetPreparationControls();
   renderVariationInputs();
   syncPromptOutputVisibility();
   resetBatchDisplay();
@@ -88,7 +89,10 @@ document.addEventListener('DOMContentLoaded', () => {
   refreshComponentBrowser();
   applyCaptionModeDefaults(true);
   refreshRecentItems();
+  if (typeof initializeStudioAccordions === 'function') initializeStudioAccordions();
   refreshRecentBatchJobs();
+  const batchAccordion = document.querySelector('[data-accordion-id="caption-batch-captioning"]');
+  if (batchAccordion) batchAccordion.addEventListener('toggle', () => { if (batchAccordion.open) refreshRecentBatchJobs(); });
   if ($('saved-bundle-id') || $('bundle-name')) {
     fillBundleEntries(initialBundleEntries || [], '');
     refreshBundleSupportData();
@@ -106,14 +110,19 @@ document.addEventListener('DOMContentLoaded', () => {
   $('prompt-preset-recent').addEventListener('change', e => { if (e.target.value) { $('prompt-preset').value = e.target.value; applyPromptPreset(e.target.value); } });
   $('caption-preset-recent').addEventListener('change', e => { if (e.target.value) { $('caption-preset').value = e.target.value; applyCaptionPreset(e.target.value); } });
   $('saved-prompt-category').addEventListener('change', refreshSavedPromptNames);
-  $('batch-mode').addEventListener('change', toggleBatchMode);
+  $('batch-mode').addEventListener('change', () => { toggleBatchMode(); refreshRecentBatchJobs(); });
+  ['batch-dataset-caption-images','batch-dataset-save-txt','batch-dataset-rename-images'].forEach(id => $(id)?.addEventListener('change', () => syncDatasetPreparationControls()));
+  ['batch-dataset-prefix','batch-dataset-pattern','batch-number-start','batch-dataset-number-padding'].forEach(id => $(id)?.addEventListener('input', () => updateDatasetPreparationPreview()));
   $('prompt-enable-variations').addEventListener('change', renderVariationInputs);
   $('prompt-variation-count').addEventListener('input', renderVariationInputs);
   $('saved-character-name').addEventListener('change', loadSavedCharacter);
   $('global-search-query').addEventListener('keydown', e => { if (e.key === 'Enter') runGlobalSearch(); });
-  ['caption-browser-query','caption-browser-model','caption-browser-style','caption-browser-date-from','caption-browser-date-to'].forEach(id => $(id).addEventListener('change', refreshCaptionBrowser));
-  $('caption-browser-category').addEventListener('change', refreshCaptionBrowser);
-  $('caption-browser-component').addEventListener('change', refreshCaptionBrowser);
+  ['caption-browser-query','caption-browser-model','caption-browser-style'].forEach(id => $(id).addEventListener('input', () => scheduleCaptionBrowserRefresh(true)));
+  ['caption-browser-date-from','caption-browser-date-to'].forEach(id => $(id).addEventListener('change', () => refreshCaptionBrowser({ resetPage:true })));
+  $('caption-browser-category').addEventListener('change', () => refreshCaptionBrowser({ resetPage:true }));
+  $('caption-browser-component').addEventListener('change', () => refreshCaptionBrowser({ resetPage:true }));
+  $('caption-browser-sort').addEventListener('change', () => refreshCaptionBrowser({ resetPage:true }));
+  $('caption-browser-page-size').addEventListener('change', () => refreshCaptionBrowser({ resetPage:true }));
   ['component-browser-query','component-browser-type'].forEach(id => $(id).addEventListener('change', refreshComponentBrowser));
   $('component-browser-category').addEventListener('change', refreshComponentBrowser);
   $('caption-mode').addEventListener('change', () => applyCaptionModeDefaults());
@@ -220,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-copy-caption').addEventListener('click', () => copyText('caption-output', 'caption-run-status'));
   $('btn-clear-caption').addEventListener('click', () => { $('caption-output').value=''; $('caption-notes').value=''; updateCounter('caption-output','caption-output-counter'); setWarning('caption-warning',''); setStatus('caption-run-status',''); });
 
-  $('btn-refresh-caption-browser').addEventListener('click', refreshCaptionBrowser);
+  $('btn-refresh-caption-browser').addEventListener('click', () => refreshCaptionBrowser({ resetPage:false }));
   $('btn-refresh-components').addEventListener('click', refreshComponentBrowser);
   $('btn-clear-components').addEventListener('click', () => { $('component-browser-query').value=''; $('component-browser-type').value=''; fillCategorySelect('component-browser-category', ['all', ...initialCategories.filter(x => x !== 'all')], 'all'); refreshComponentBrowser(); });
   $('btn-build-component-draft').addEventListener('click', buildComponentDraftFromSelection);
@@ -233,9 +242,12 @@ document.addEventListener('DOMContentLoaded', () => {
     $('caption-browser-date-from').value = '';
     $('caption-browser-date-to').value = '';
     $('caption-browser-component').value = '';
+    if (typeof resetCaptionBrowserControls === 'function') resetCaptionBrowserControls();
     fillCategorySelect('caption-browser-category', ['all', ...initialCategories.filter(x => x !== 'all')], 'all');
-    refreshCaptionBrowser();
+    refreshCaptionBrowser({ resetPage:true });
   });
+  $('btn-caption-browser-prev').addEventListener('click', () => changeCaptionBrowserPage(-1));
+  $('btn-caption-browser-next').addEventListener('click', () => changeCaptionBrowserPage(1));
   $('caption-browser-grid').addEventListener('click', async (e) => {
     const editBtn = e.target.closest('[data-caption-edit]');
     const previewBtn = e.target.closest('[data-caption-preview]');
@@ -279,11 +291,16 @@ document.addEventListener('DOMContentLoaded', () => {
   $('btn-batch-retry').addEventListener('click', retryFailedBatchCaption);
   $('btn-batch-export-log').addEventListener('click', exportBatchLog);
   $('btn-batch-cancel-post-action').addEventListener('click', cancelBatchPostAction);
+  if ($('btn-interrupted-batch-resume')) $('btn-interrupted-batch-resume').addEventListener('click', () => handleInterruptedBatchAction('resume'));
+  if ($('btn-interrupted-batch-start-fresh')) $('btn-interrupted-batch-start-fresh').addEventListener('click', () => handleInterruptedBatchAction('start_fresh'));
+  if ($('btn-interrupted-batch-open-log')) $('btn-interrupted-batch-open-log').addEventListener('click', () => handleInterruptedBatchAction('open_log'));
+  if ($('btn-interrupted-batch-cancel')) $('btn-interrupted-batch-cancel').addEventListener('click', () => handleInterruptedBatchAction('cancel'));
   $('batch-session-select').addEventListener('change', async e => {
     if (!e.target.value) return;
     currentBatchJobId = e.target.value;
     await pollBatchStatus();
   });
+  $('btn-batch-input-folder').addEventListener('click', () => browseForFolder('batch-folder'));
   $('btn-batch-output-folder').addEventListener('click', () => browseForFolder('batch-output-folder'));
   $('btn-save-settings').addEventListener('click', saveSettings);
   $('btn-export-presets').addEventListener('click', exportPresets);
